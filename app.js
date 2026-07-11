@@ -217,9 +217,9 @@ function setupEventListeners() {
   });
 
   // 看板：A/B 組切換
-  document.querySelectorAll('.team-tab-btn').forEach(btn => {
+  document.querySelectorAll('.team-sidebar-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.team-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.team-sidebar-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeTeam = btn.getAttribute('data-team');
       renderBoard();

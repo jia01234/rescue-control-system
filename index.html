@@ -48,46 +48,56 @@
       
       <!-- 頁籤一：管制看板 -->
       <section id="tab-board" class="tab-panel active">
-        <!-- 小隊快速切換 (手機端) -->
-        <div class="team-selector-tabs">
-          <button class="team-tab-btn active" data-team="A">搜救 A 組</button>
-          <button class="team-tab-btn" data-team="B">搜救 B 組</button>
-        </div>
-
-        <div class="board-columns">
-          <!-- 待命區 -->
-          <div class="board-column" id="col-standby">
-            <div class="column-header">
-              <div class="indicator bg-grey"></div>
-              <h2>待命 (Standby)</h2>
-              <span class="count-badge" id="count-standby">0</span>
-            </div>
-            <div class="member-list" id="list-standby">
-              <!-- 動態生成成員卡片 -->
-            </div>
+        <div class="board-layout-wrapper">
+          <!-- 左側小隊切換直列選單 -->
+          <div class="team-sidebar">
+            <button class="team-sidebar-btn active" data-team="A">
+              <span class="team-letter">A</span>
+              <span class="team-label">搜救A組</span>
+            </button>
+            <button class="team-sidebar-btn" data-team="B">
+              <span class="team-letter">B</span>
+              <span class="team-label">搜救B組</span>
+            </button>
           </div>
 
-          <!-- 熱區工作區 -->
-          <div class="board-column warning-border" id="col-hotzone">
-            <div class="column-header">
-              <div class="indicator bg-danger pulse-dot"></div>
-              <h2>熱區中 (Hot Zone)</h2>
-              <span class="count-badge bg-danger" id="count-hotzone">0</span>
-            </div>
-            <div class="member-list" id="list-hotzone">
-              <!-- 動態生成成員卡片 -->
-            </div>
-          </div>
+          <div class="board-main-content">
+            <div class="board-columns">
+              <!-- 待命區 -->
+              <div class="board-column" id="col-standby">
+                <div class="column-header">
+                  <div class="indicator bg-grey"></div>
+                  <h2>待命 (Standby)</h2>
+                  <span class="count-badge" id="count-standby">0</span>
+                </div>
+                <div class="member-list" id="list-standby">
+                  <!-- 動態生成成員卡片 -->
+                </div>
+              </div>
 
-          <!-- 已返回區 -->
-          <div class="board-column" id="col-returned">
-            <div class="column-header">
-              <div class="indicator bg-success"></div>
-              <h2>已返回 (Returned)</h2>
-              <span class="count-badge bg-success" id="count-returned">0</span>
-            </div>
-            <div class="member-list" id="list-returned">
-              <!-- 動態生成成員卡片 -->
+              <!-- 熱區工作區 -->
+              <div class="board-column warning-border" id="col-hotzone">
+                <div class="column-header">
+                  <div class="indicator bg-danger pulse-dot"></div>
+                  <h2>熱區中 (Hot Zone)</h2>
+                  <span class="count-badge bg-danger" id="count-hotzone">0</span>
+                </div>
+                <div class="member-list" id="list-hotzone">
+                  <!-- 動態生成成員卡片 -->
+                </div>
+              </div>
+
+              <!-- 已返回區 -->
+              <div class="board-column" id="col-returned">
+                <div class="column-header">
+                  <div class="indicator bg-success"></div>
+                  <h2>已返回 (Returned)</h2>
+                  <span class="count-badge bg-success" id="count-returned">0</span>
+                </div>
+                <div class="member-list" id="list-returned">
+                  <!-- 動態生成成員卡片 -->
+                </div>
+              </div>
             </div>
           </div>
         </div>

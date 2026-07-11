@@ -205,34 +205,84 @@ body {
 .badge-warning { background-color: #f59e0b; color: #1e1b4b; }
 .badge-success { background-color: #10b981; color: white; }
 
-/* 管制看板版面 (Grid layout) */
-.team-selector-tabs {
+/* 管制看板版面 (左側直列小隊切換樣式) */
+.board-layout-wrapper {
   display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.team-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 76px;
+  flex-shrink: 0;
+}
+
+.team-sidebar-btn {
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background: var(--bg-card);
   border: 1px solid var(--border-glass);
-  padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.team-tab-btn {
-  flex-grow: 1;
-  background: none;
-  border: none;
+  border-radius: 16px;
   color: var(--color-text-muted);
-  padding: 10px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: var(--font-display);
+  gap: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.team-tab-btn.active {
+.team-sidebar-btn .team-letter {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.team-sidebar-btn .team-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.team-sidebar-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.team-sidebar-btn.active {
   background: var(--color-primary);
   color: white;
-  box-shadow: 0 4px 12px var(--color-primary-glow);
+  border-color: transparent;
+  box-shadow: 0 8px 20px var(--color-primary-glow);
+}
+
+.board-main-content {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .board-layout-wrapper {
+    gap: 8px;
+  }
+  .team-sidebar {
+    width: 60px;
+    gap: 8px;
+  }
+  .team-sidebar-btn {
+    height: 90px;
+    border-radius: 12px;
+  }
+  .team-sidebar-btn .team-letter {
+    font-size: 1.4rem;
+  }
+  .team-sidebar-btn .team-label {
+    font-size: 0.65rem;
+  }
 }
 
 .board-columns {
