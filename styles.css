@@ -275,40 +275,162 @@ body {
   min-width: 0;
 }
 
+/* 行動裝置直屏優化 (Mobile Portrait Optimizations) */
 @media (max-width: 600px) {
-  .board-layout-wrapper {
+  /* 頂部 Header 改為雙行或極簡排列，防擠壓變形 */
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-  }
-  .team-sidebar {
-    width: 64px;
-    padding: 10px 4px;
-    gap: 10px;
+    padding: 10px 12px;
     border-radius: 12px;
   }
-  .team-sidebar-btn {
-    height: 80px;
-    border-radius: 10px;
-    gap: 2px;
+  
+  .header-logo {
+    justify-content: space-between;
+    width: 100%;
   }
-  .team-sidebar-btn .team-letter {
-    font-size: 1.5rem;
+  
+  .header-status {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
   }
-  .team-sidebar-btn .team-label {
+
+  .header-status-actions {
+    display: flex;
+    gap: 4px;
+    margin-right: 0;
+  }
+
+  .btn-op-start, .btn-op-end {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+  }
+
+  .status-item {
+    align-items: flex-end;
+  }
+
+  .status-item .label {
     font-size: 0.65rem;
-    transform: scale(0.9);
+  }
+
+  .status-item .value {
+    font-size: 1rem;
+  }
+
+  .timer-controls-container {
+    padding: 2px 6px;
+    gap: 6px;
+  }
+
+  .btn-timer-ctrl {
+    width: 22px;
+    height: 22px;
+    font-size: 0.65rem;
+  }
+
+  /* 核心看板排版：改為上下排列，並將側邊欄橫置置頂 */
+  .board-layout-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .team-sidebar {
+    width: 100%;
+    flex-direction: row;
+    height: auto;
+    padding: 6px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .team-sidebar-btn {
+    flex: 1;
+    height: 48px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+  }
+
+  .team-sidebar-btn .team-letter {
+    font-size: 1.25rem;
+  }
+
+  .team-sidebar-btn .team-label {
+    font-size: 0.75rem;
+    transform: none;
+  }
+
+  /* 二欄看板在此尺寸下依然維持左右並排，方便拖曳與直覺比對 */
+  .board-columns {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .board-column {
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .column-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .column-header h2 {
+    font-size: 0.85rem;
+  }
+
+  .count-badge {
+    padding: 1px 6px;
+    font-size: 0.7rem;
+  }
+
+  .member-list {
+    gap: 6px;
+  }
+
+  /* 隊員卡片改為垂直堆疊排列，避免名字與時間過擠重疊 */
+  .member-card {
+    padding: 8px 10px;
+    border-radius: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .member-info {
+    align-items: center;
+    text-align: center;
+  }
+
+  .member-name {
+    font-size: 0.9rem;
+  }
+
+  .member-team-label {
+    display: none; /* 看板上已有分組，在此隱藏以省空間 */
+  }
+
+  .member-time {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    justify-content: center;
+    margin-top: 2px;
   }
 }
 
 .board-columns {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .board-columns {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 .board-column {
