@@ -1532,3 +1532,27 @@ body {
   max-width: 600px;
   width: 90%;
 }
+
+/* 批次複選選中狀態的卡片與圖示樣式 */
+.member-card.selected-for-batch {
+  border-color: #06b6d4 !important;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+  background: rgba(6, 182, 212, 0.08) !important;
+}
+
+.member-card.selected-for-batch::before {
+  content: "☑️";
+  margin-right: 6px;
+  font-size: 0.95rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.multi-select-active .member-card:not(.selected-for-batch)::before {
+  content: "🔳";
+  margin-right: 6px;
+  font-size: 0.95rem;
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.6;
+}

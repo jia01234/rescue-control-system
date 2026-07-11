@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 
@@ -83,6 +83,18 @@
               <div class="log-input-group">
                 <input type="text" id="board-manual-log-input" placeholder="在此輸入或選取預設字記錄...">
                 <button id="board-add-manual-log-btn" class="btn btn-primary">記錄</button>
+              </div>
+            </div>
+
+            <!-- 批次複選控制列 -->
+            <div class="batch-select-bar" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.25); border: 1px solid var(--border-glass); padding: 8px 12px; border-radius: 8px;">
+              <button id="multi-select-toggle-btn" class="btn btn-sm btn-secondary" style="font-weight: 700; border-radius: 6px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;">
+                <span id="multi-select-icon">🔳</span> <span id="multi-select-btn-text">開啟複選移動</span>
+              </button>
+              <div id="multi-select-actions" class="hidden" style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.8rem; color: var(--color-text-muted); margin-right: 4px;" id="batch-selected-count">已選 0 人</span>
+                <button id="batch-move-standby" class="btn btn-sm btn-success" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; background: #059669; border: none; color: white; cursor: pointer;">移至待命</button>
+                <button id="batch-move-hotzone" class="btn btn-sm btn-warning" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; background: #d97706; border: none; color: white; cursor: pointer;">移至熱區</button>
               </div>
             </div>
 
@@ -429,6 +441,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

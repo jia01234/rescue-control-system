@@ -31,6 +31,8 @@ let missionStartTime = null;
 let evacZones = ["前進指揮站", "車輛停放區", "Boo"];
 let activeTimers = {}; // 記錄各熱區人員的計時器
 let loopEvacAlertInterval = null; // 全面撤離的音效循環定時器
+let isMultiSelectMode = false;     // 是否為批次複選模式
+let selectedMemberIds = new Set(); // 記錄複選中人員的 ID 集合
 
 // Web Audio API 上下文 (延遲載入)
 let audioCtx = null;
@@ -535,6 +537,108 @@ function setupEventListeners() {
       renderAll();
     }
   });
+
+  // 批次複選模式控制監聽
+  const toggleBtn = document.getElementById('multi-select-toggle-btn');
+  const btnText = document.getElementById('multi-select-btn-text');
+  const btnIcon = document.getElementById('multi-select-icon');
+  const actionsEl = document.getElementById('multi-select-actions');
+
+  toggleBtn.addEventListener('click', () => {
+    isMultiSelectMode = !isMultiSelectMode;
+    if (isMultiSelectMode) {
+      toggleBtn.classList.remove('btn-secondary');
+      toggleBtn.classList.add('btn-primary');
+      toggleBtn.style.background = 'var(--color-primary)';
+      btnText.textContent = '關閉複選模式';
+      btnIcon.textContent = '☑️';
+      actionsEl.classList.remove('hidden');
+      selectedMemberIds.clear();
+      document.getElementById('batch-selected-count').textContent = '已選 0 人';
+    } else {
+      toggleBtn.classList.add('btn-secondary');
+      toggleBtn.classList.remove('btn-primary');
+      toggleBtn.style.background = '';
+      btnText.textContent = '開啟複選移動';
+      btnIcon.textContent = '🔳';
+      actionsEl.classList.add('hidden');
+      selectedMemberIds.clear();
+    }
+    renderBoard();
+  });
+
+  document.getElementById('batch-move-standby').addEventListener('click', () => {
+    if (selectedMemberIds.size === 0) {
+      alert('請先選取要移動的人員！');
+      return;
+    }
+    const names = [];
+    selectedMemberIds.forEach(id => {
+      const member = roster.find(m => m.id === id);
+      if (member) {
+        member.status = 'standby';
+        member.entryTime = null;
+        member.timerStarted = false;
+        names.push(member.name);
+      }
+    });
+    saveRoster();
+    addLog('auto', `【批次移回】安全官批次將 ${activeTeam}組 隊員 [${names.join(', ')}] 移回待命。`);
+    
+    // 退出複選模式
+    isMultiSelectMode = false;
+    toggleBtn.classList.add('btn-secondary');
+    toggleBtn.classList.remove('btn-primary');
+    toggleBtn.style.background = '';
+    btnText.textContent = '開啟複選移動';
+    btnIcon.textContent = '🔳';
+    actionsEl.classList.add('hidden');
+    selectedMemberIds.clear();
+    
+    renderAll();
+    triggerAudioSignal('warning');
+  });
+
+  document.getElementById('batch-move-hotzone').addEventListener('click', () => {
+    if (selectedMemberIds.size === 0) {
+      alert('請先選取要移動的人員！');
+      return;
+    }
+    
+    // 檢查出勤安全鎖：如果另一隊有人在熱區，禁止此隊移入熱區
+    const otherTeam = activeTeam === 'A' ? 'B' : 'A';
+    const isOtherTeamActive = roster.some(m => m.team === otherTeam && m.status === 'hotzone');
+    if (isOtherTeamActive) {
+      alert(`⚠️ 管制警告！目前【搜救 ${otherTeam} 組】正在熱區作業，兩組不可同時在熱區出勤！`);
+      return;
+    }
+    
+    const names = [];
+    selectedMemberIds.forEach(id => {
+      const member = roster.find(m => m.id === id);
+      if (member) {
+        member.status = 'hotzone';
+        member.entryTime = new Date().toISOString();
+        member.timerStarted = true;
+        names.push(member.name);
+      }
+    });
+    saveRoster();
+    addLog('danger', `🚨【批次出勤】安全官批次將 ${activeTeam}組 隊員 [${names.join(', ')}] 送入熱區作業並開始計時。`);
+    
+    // 退出複選模式
+    isMultiSelectMode = false;
+    toggleBtn.classList.add('btn-secondary');
+    toggleBtn.classList.remove('btn-primary');
+    toggleBtn.style.background = '';
+    btnText.textContent = '開啟複選移動';
+    btnIcon.textContent = '🔳';
+    actionsEl.classList.add('hidden');
+    selectedMemberIds.clear();
+    
+    renderAll();
+    triggerAudioSignal('warning');
+  });
 }
 
 // --- 渲染畫面核心函式 ---
@@ -572,6 +676,16 @@ function renderBoard() {
     bannerEl.classList.add('hidden');
   }
 
+  // 更新複選模式下的欄位容器樣式
+  const columnsEl = document.querySelector('.board-columns');
+  if (columnsEl) {
+    if (isMultiSelectMode) {
+      columnsEl.classList.add('multi-select-active');
+    } else {
+      columnsEl.classList.remove('multi-select-active');
+    }
+  }
+
   // 篩選當前選擇小隊且不在預備名單的人員
   const activeMembers = roster.filter(m => m.team === activeTeam);
 
@@ -583,8 +697,9 @@ function renderBoard() {
       member.timerStarted = false;
     }
 
+    const isSelected = selectedMemberIds.has(member.id);
     const card = document.createElement('div');
-    card.className = `member-card ${member.status === 'hotzone' ? 'in-hotzone' : ''}`;
+    card.className = `member-card ${member.status === 'hotzone' ? 'in-hotzone' : ''} ${isSelected ? 'selected-for-batch' : ''}`;
     card.setAttribute('data-id', member.id);
     
     // 綁定拖曳與點擊二合一觸控事件
@@ -1043,8 +1158,12 @@ function setupDragAndDrop(cardEl, member) {
         changeMemberStatus(activeDragId, newStatus);
       }
     } else {
-      // 若沒有明顯滑移，則判定為點選：開啟原本的 Bottom Sheet 供點擊
-      openStatusSheet(member);
+      // 若沒有明顯滑移，則判定為點選
+      if (isMultiSelectMode) {
+        toggleMemberSelection(member.id);
+      } else {
+        openStatusSheet(member);
+      }
     }
     
     // 重設狀態變數
@@ -1052,6 +1171,34 @@ function setupDragAndDrop(cardEl, member) {
     dragOriginalCard = null;
     isDragging = false;
   });
+
+  // 相容桌上型電腦點擊
+  cardEl.addEventListener('click', (e) => {
+    if (e.pointerType === 'touch') return;
+    if (isDragging) return;
+    if (isMultiSelectMode) {
+      toggleMemberSelection(member.id);
+    } else {
+      openStatusSheet(member);
+    }
+  });
+}
+
+// 批次複選點擊切換輔助函數
+function toggleMemberSelection(id) {
+  if (selectedMemberIds.has(id)) {
+    selectedMemberIds.delete(id);
+  } else {
+    selectedMemberIds.add(id);
+  }
+  
+  // 更新複選計數
+  const countEl = document.getElementById('batch-selected-count');
+  if (countEl) {
+    countEl.textContent = `已選 ${selectedMemberIds.size} 人`;
+  }
+  
+  renderBoard();
 }
 
 function highlightDropColumns(x, y) {
