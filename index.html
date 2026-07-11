@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>安全官人員工作管制系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 全局警報覆蓋層 (緊急撤離時閃爍) -->
+  <div id="emergency-overlay" class="emergency-overlay hidden">
+    <div class="overlay-content">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-title">!!! 全面緊急撤離 !!!</div>
+      <div class="alert-zones">
+        <p>1. 第一撤離區：<strong>前進指揮站</strong></p>
+        <p>2. 第二撤離區：<strong>車輛停放區</strong></p>
+        <p>3. 第三撤離區：<strong>Boo</strong></p>
+      </div>
+      <button id="close-overlay-btn" class="btn btn-secondary">關閉警示畫面</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- 頂部狀態列 -->
+    <header class="app-header">
+      <div class="header-logo">
+        <span class="badge badge-danger">安全官</span>
+        <h1>搜救管制站</h1>
+      </div>
+      <div class="header-status">
+        <div class="status-item">
+          <span class="label">熱區人數</span>
+          <span id="hotzone-count" class="value text-warning">0</span>
+        </div>
+        <div class="status-item">
+          <span class="label">任務時間</span>
+          <span id="mission-timer" class="value">00:00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="app-content">
+      
+      <!-- 頁籤一：管制看板 -->
+      <section id="tab-board" class="tab-panel active">
+        <!-- 小隊快速切換 (手機端) -->
+        <div class="team-selector-tabs">
+          <button class="team-tab-btn active" data-team="A">搜救 A 組</button>
+          <button class="team-tab-btn" data-team="B">搜救 B 組</button>
+        </div>
+
+        <div class="board-columns">
+          <!-- 待命區 -->
+          <div class="board-column" id="col-standby">
+            <div class="column-header">
+              <div class="indicator bg-grey"></div>
+              <h2>待命 (Standby)</h2>
+              <span class="count-badge" id="count-standby">0</span>
+            </div>
+            <div class="member-list" id="list-standby">
+              <!-- 動態生成成員卡片 -->
+            </div>
+          </div>
+
+          <!-- 熱區工作區 -->
+          <div class="board-column warning-border" id="col-hotzone">
+            <div class="column-header">
+              <div class="indicator bg-danger pulse-dot"></div>
+              <h2>熱區中 (Hot Zone)</h2>
+              <span class="count-badge bg-danger" id="count-hotzone">0</span>
+            </div>
+            <div class="member-list" id="list-hotzone">
+              <!-- 動態生成成員卡片 -->
+            </div>
+          </div>
+
+          <!-- 已返回區 -->
+          <div class="board-column" id="col-returned">
+            <div class="column-header">
+              <div class="indicator bg-success"></div>
+              <h2>已返回 (Returned)</h2>
+              <span class="count-badge bg-success" id="count-returned">0</span>
+            </div>
+            <div class="member-list" id="list-returned">
+              <!-- 動態生成成員卡片 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁籤二：撤離與訊號 -->
+      <section id="tab-signals" class="tab-panel">
+        <div class="panel-card danger-card text-center">
+          <h2 class="section-title text-danger">🚨 緊急撤離控制</h2>
+          <p class="subtitle">按下後將會播送警報音，並開啟點名引導</p>
+          <button id="global-evacuate-btn" class="btn btn-danger btn-xl pulse-btn">
+            全面緊急撤離
+          </button>
+        </div>
+
+        <div class="panel-grid">
+          <!-- 撤離區資訊 -->
+          <div class="panel-card">
+            <h3 class="card-title">預設撤離區 (Evacuate Zones)</h3>
+            <div class="zone-list">
+              <div class="zone-item">
+                <span class="zone-num">1</span>
+                <span class="zone-name">前進指揮站</span>
+              </div>
+              <div class="zone-item">
+                <span class="zone-num">2</span>
+                <span class="zone-name">車輛停放區</span>
+              </div>
+              <div class="zone-item">
+                <span class="zone-num">3</span>
+                <span class="zone-name">Boo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 訊號宣讀與音效播放 -->
+          <div class="panel-card">
+            <h3 class="card-title">撤離訊號宣讀與播放</h3>
+            <div class="signal-buttons">
+              <div class="signal-action-card">
+                <div class="signal-info">
+                  <h4>全面撤離 (Evacuate)</h4>
+                  <p class="signal-desc">持續發出「三短音」（每聲持續約 1 秒），直到所有人員撤離危險區域。</p>
+                  <div class="readout-box">「全面撤離！全面撤離！所有人立即撤退至指定撤離區！」</div>
+                </div>
+                <button class="btn btn-signal" id="play-evac-audio">
+                  <span class="icon">🔊</span> 播放三短音
+                </button>
+              </div>
+
+              <div class="signal-action-card">
+                <div class="signal-info">
+                  <h4>停止作業／保持安靜 (Cease Operations)</h4>
+                  <p class="signal-desc">發出「一長音」（持續約 3 秒），用於現場聆聽生還者動靜或結構評估。</p>
+                  <div class="readout-box">「停止作業，保持安靜！現場靜默 3 分鐘！」</div>
+                </div>
+                <button class="btn btn-signal btn-warning" id="play-quiet-audio">
+                  <span class="icon">🔊</span> 播放一長音
+                </button>
+              </div>
+
+              <div class="signal-action-card">
+                <div class="signal-info">
+                  <h4>恢復作業 (Resume Operations)</h4>
+                  <p class="signal-desc">發出「一長音搭配一短音」。</p>
+                  <div class="readout-box">「現場安全，搜救小隊恢復作業！」</div>
+                </div>
+                <button class="btn btn-signal btn-success" id="play-resume-audio">
+                  <span class="icon">🔊</span> 播放一長一短
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁籤三：日誌與提醒 -->
+      <section id="tab-logs" class="tab-panel">
+        <div class="panel-grid">
+          <!-- 智慧提醒與檢核表 -->
+          <div class="panel-card">
+            <h3 class="card-title">安全提醒與報表申報</h3>
+            
+            <div class="reminder-section">
+              <!-- 定時無線電確認 -->
+              <div class="reminder-box timer-reminder">
+                <div class="reminder-info">
+                  <h4>無線電安全回報 (Radio Check)</h4>
+                  <p>每 20 分鐘需確認熱區小隊安全狀態</p>
+                  <span id="radio-timer" class="time-countdown">20:00</span>
+                </div>
+                <button id="reset-radio-timer-btn" class="btn btn-sm btn-secondary">重設時間</button>
+              </div>
+
+              <!-- 表單填寫提醒 -->
+              <div class="checklist-container">
+                <h4 class="sub-title">外部報表提醒</h4>
+                <div class="checklist-item">
+                  <input type="checkbox" id="chk-form-worksite">
+                  <label for="chk-form-worksite">
+                    <strong>工作場地評估表 (最常用)</strong>
+                    <span class="desc">進入熱區工作時需登入系統填報</span>
+                  </label>
+                  <span class="badge badge-warning hidden" id="badge-worksite-remind">待填寫</span>
+                </div>
+                <div class="checklist-item">
+                  <input type="checkbox" id="chk-form-victim">
+                  <label for="chk-form-victim">
+                    <strong>受困者解救表 (最常用)</strong>
+                    <span class="desc">成功救出或移交受困者時填報</span>
+                  </label>
+                  <span class="badge badge-warning hidden" id="badge-victim-remind">待填寫</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 安全日誌 -->
+          <div class="panel-card">
+            <div class="card-header-flex">
+              <h3 class="card-title">安全官日誌 (Auto & Manual)</h3>
+              <div class="btn-group">
+                <button id="export-log-btn" class="btn btn-sm btn-success">匯出 CSV</button>
+                <button id="clear-log-btn" class="btn btn-sm btn-danger">清除</button>
+              </div>
+            </div>
+            
+            <div class="log-console" id="log-list">
+              <!-- 日誌內容 -->
+            </div>
+
+            <div class="log-input-group">
+              <input type="text" id="manual-log-input" placeholder="輸入自訂事件日誌（如：聽到瓦礫堆下有回應）">
+              <button id="add-manual-log-btn" class="btn btn-primary">記錄</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁籤四：人員管理 -->
+      <section id="tab-roster" class="tab-panel">
+        <div class="panel-card">
+          <div class="card-header-flex">
+            <h3 class="card-title">人員名冊編輯</h3>
+            <button id="open-add-member-btn" class="btn btn-sm btn-primary">+ 新增隊員</button>
+          </div>
+
+          <div class="roster-grid">
+            <!-- A 組 -->
+            <div class="roster-list-card">
+              <h4>搜救 A 組</h4>
+              <div class="roster-list" id="roster-list-a"></div>
+            </div>
+
+            <!-- B 組 -->
+            <div class="roster-list-card">
+              <h4>搜救 B 組</h4>
+              <div class="roster-list" id="roster-list-b"></div>
+            </div>
+
+            <!-- 預備名單 -->
+            <div class="roster-list-card">
+              <h4>預備名單 (Standby List)</h4>
+              <div class="roster-list" id="roster-list-standby"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 底部導覽列 (手機觸控友善) -->
+    <nav class="app-nav">
+      <button class="nav-btn active" data-tab="tab-board">
+        <span class="icon">📋</span>
+        <span class="label">管制看板</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-signals">
+        <span class="icon">📢</span>
+        <span class="label">撤離訊號</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-logs">
+        <span class="icon">📝</span>
+        <span class="label">日誌提醒</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-roster">
+        <span class="icon">👥</span>
+        <span class="label">人員名冊</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- 懸浮「誰在熱區」一鍵查詢按鈕 -->
+  <button id="floating-query-btn" class="floating-btn pulse-glow">
+    熱區
+  </button>
+
+  <!-- 誰在熱區的查詢彈窗 (Modal) -->
+  <div id="hotzone-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔥 當前熱區工作人員</h3>
+        <button id="close-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="hotzone-query-list" class="hot-query-list">
+          <!-- 熱區名單 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-evac-btn" class="btn btn-danger">🚨 全員撤離</button>
+        <button id="modal-close-footer" class="btn btn-secondary">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 人員狀態切換底部選單 (Bottom Sheet) -->
+  <div id="status-sheet" class="sheet hidden">
+    <div class="sheet-overlay"></div>
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <h4 id="sheet-member-name">隊員姓名</h4>
+        <p id="sheet-member-team">搜救 A 組</p>
+      </div>
+      <div class="sheet-body">
+        <button class="sheet-btn" data-status="standby">
+          <span class="indicator bg-grey"></span> 移至 待命 (Standby)
+        </button>
+        <button class="sheet-btn text-warning" data-status="hotzone">
+          <span class="indicator bg-danger"></span> 移至 熱區中 (Hot Zone)
+        </button>
+        <button class="sheet-btn text-success" data-status="returned">
+          <span class="indicator bg-success"></span> 移至 已返回 (Returned)
+        </button>
+      </div>
+      <div class="sheet-footer">
+        <button id="close-sheet-btn" class="btn btn-secondary btn-block">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增隊員彈窗 (Modal) -->
+  <div id="add-member-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>👥 新增搜救隊員</h3>
+        <button id="close-add-modal" class="close-btn">&times;</button>
+      </div>
+      <form id="add-member-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="new-member-name">姓名</label>
+            <input type="text" id="new-member-name" required placeholder="輸入姓名（如：王小明）">
+          </div>
+          <div class="form-group">
+            <label for="new-member-group">分配任務組別</label>
+            <select id="new-member-group">
+              <option value="A">搜救 A 組</option>
+              <option value="B">搜救 B 組</option>
+              <option value="standby">預備名單</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">新增</button>
+          <button type="button" id="cancel-add-modal" class="btn btn-secondary">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
