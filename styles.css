@@ -1258,3 +1258,10 @@ body {
 .btn-timer-ctrl:active {
   transform: scale(0.95);
 }
+
+/* 拖曳懸浮時目標欄位高亮 */
+.board-column.drag-hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.15);
+}

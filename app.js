@@ -455,8 +455,8 @@ function renderBoard() {
     card.className = `member-card ${member.status === 'hotzone' ? 'in-hotzone' : ''}`;
     card.setAttribute('data-id', member.id);
     
-    // 點擊卡片開啟底部變更狀態選單
-    card.addEventListener('click', () => openStatusSheet(member));
+    // 綁定拖曳與點擊二合一觸控事件
+    setupDragAndDrop(card, member);
 
     card.innerHTML = `
       <div class="member-info">
@@ -891,4 +891,140 @@ function formatSeconds(totalSeconds) {
     return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// ==========================================
+// 平板觸控拖曳 (Drag & Drop) 二合一邏輯
+// ==========================================
+let dragClone = null;
+let activeDragId = null;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStartTouchX = 0;
+let dragStartTouchY = 0;
+let isDragging = false;
+let dragOriginalCard = null;
+
+function setupDragAndDrop(cardEl, member) {
+  // 綁定觸控事件
+  cardEl.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    dragStartTouchX = touch.clientX;
+    dragStartTouchY = touch.clientY;
+    activeDragId = member.id;
+    dragOriginalCard = cardEl;
+    isDragging = false;
+    
+    // 記錄觸控點相對於卡片左上角的相對位置
+    const rect = cardEl.getBoundingClientRect();
+    dragStartX = dragStartTouchX - rect.left;
+    dragStartY = dragStartTouchY - rect.top;
+  }, { passive: true });
+
+  cardEl.addEventListener('touchmove', (e) => {
+    if (!activeDragId) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragStartTouchX;
+    const dy = touch.clientY - dragStartTouchY;
+    
+    // 當手指移動超過 10 像素時，才判定為「拖曳動作」而非「點擊」
+    if (!isDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      isDragging = true;
+      
+      const rect = dragOriginalCard.getBoundingClientRect();
+      // 複製一份暫時的卡片作為拖曳視覺分身
+      dragClone = dragOriginalCard.cloneNode(true);
+      dragClone.className = 'member-card dragging-clone';
+      dragClone.style.position = 'fixed';
+      dragClone.style.width = rect.width + 'px';
+      dragClone.style.height = rect.height + 'px';
+      dragClone.style.left = rect.left + 'px';
+      dragClone.style.top = rect.top + 'px';
+      dragClone.style.pointerEvents = 'none'; // 讓觸控點能穿透 clone 探測下方元素
+      dragClone.style.zIndex = '2000';
+      dragClone.style.opacity = '0.9';
+      dragClone.style.transform = 'scale(1.04)';
+      dragClone.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.5)';
+      dragClone.style.transition = 'none';
+      document.body.appendChild(dragClone);
+      
+      // 原卡片半透明表示正在拖移
+      dragOriginalCard.style.opacity = '0.35';
+    }
+    
+    if (isDragging && dragClone) {
+      e.preventDefault(); // 阻止平板滾動畫面
+      
+      // 讓卡片分身跟隨手指移動
+      dragClone.style.left = (touch.clientX - dragStartX) + 'px';
+      dragClone.style.top = (touch.clientY - dragStartY) + 'px';
+      
+      // 高亮標示目標區域
+      highlightDropColumns(touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+
+  cardEl.addEventListener('touchend', (e) => {
+    if (!activeDragId) return;
+    
+    if (isDragging) {
+      const touch = e.changedTouches[0];
+      const targetColumn = findDropColumn(touch.clientX, touch.clientY);
+      
+      // 移除視覺分身與復原不透明度
+      if (dragClone) {
+        dragClone.remove();
+        dragClone = null;
+      }
+      if (dragOriginalCard) {
+        dragOriginalCard.style.opacity = '1';
+      }
+      
+      // 移除所有看板欄位的高亮
+      document.querySelectorAll('.board-column').forEach(col => col.classList.remove('drag-hover'));
+      
+      // 如果手指在正確的欄位釋放，執行變更狀態
+      if (targetColumn) {
+        const newStatus = targetColumn === 'col-hotzone' ? 'hotzone' : 'standby';
+        changeMemberStatus(activeDragId, newStatus);
+      }
+    } else {
+      // 若沒有明顯滑移，則判定為點選：開啟原本的 Bottom Sheet 供點擊
+      openStatusSheet(member);
+    }
+    
+    // 重設狀態變數
+    activeDragId = null;
+    dragOriginalCard = null;
+    isDragging = false;
+  });
+}
+
+function highlightDropColumns(x, y) {
+  document.querySelectorAll('.board-column').forEach(col => col.classList.remove('drag-hover'));
+  const colId = findDropColumn(x, y);
+  if (colId) {
+    document.getElementById(colId).classList.add('drag-hover');
+  }
+}
+
+function findDropColumn(x, y) {
+  const standbyCol = document.getElementById('col-standby');
+  const hotzoneCol = document.getElementById('col-hotzone');
+  
+  if (standbyCol) {
+    const rect = standbyCol.getBoundingClientRect();
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      return 'col-standby';
+    }
+  }
+  
+  if (hotzoneCol) {
+    const rect = hotzoneCol.getBoundingClientRect();
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      return 'col-hotzone';
+    }
+  }
+  
+  return null;
 }
