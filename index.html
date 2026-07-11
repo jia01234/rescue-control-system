@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <!-- 全局警報覆蓋層 (緊急撤離時閃爍) -->
@@ -38,7 +38,13 @@
         </div>
         <div class="status-item">
           <span class="label">任務時間</span>
-          <span id="mission-timer" class="value">00:00:00</span>
+          <div class="timer-controls-container">
+            <span id="mission-timer" class="value">00:00:00</span>
+            <div class="timer-btn-group">
+              <button id="mission-start-btn" class="btn-timer-ctrl">▶️</button>
+              <button id="mission-reset-btn" class="btn-timer-ctrl">🔄</button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -89,18 +95,6 @@
                   <span class="count-badge bg-danger" id="count-hotzone">0</span>
                 </div>
                 <div class="member-list" id="list-hotzone">
-                  <!-- 動態生成成員卡片 -->
-                </div>
-              </div>
-
-              <!-- 已返回區 -->
-              <div class="board-column" id="col-returned">
-                <div class="column-header">
-                  <div class="indicator bg-success"></div>
-                  <h2>已返回 (Returned)</h2>
-                  <span class="count-badge bg-success" id="count-returned">0</span>
-                </div>
-                <div class="member-list" id="list-returned">
                   <!-- 動態生成成員卡片 -->
                 </div>
               </div>
@@ -335,9 +329,6 @@
         <button class="sheet-btn text-warning" data-status="hotzone">
           <span class="indicator bg-danger"></span> 移至 熱區中 (Hot Zone)
         </button>
-        <button class="sheet-btn text-success" data-status="returned">
-          <span class="indicator bg-success"></span> 移至 已返回 (Returned)
-        </button>
       </div>
       <div class="sheet-footer">
         <button id="close-sheet-btn" class="btn btn-secondary btn-block">取消</button>
@@ -375,6 +366,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

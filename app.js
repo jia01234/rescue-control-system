@@ -40,7 +40,6 @@ let audioCtx = null;
 document.addEventListener('DOMContentLoaded', () => {
   initData();
   setupEventListeners();
-  startMissionTimer();
   startRadioTimer();
   renderAll();
 });
@@ -49,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function initData() {
   const localRoster = localStorage.getItem('rescue_roster');
   const localLogs = localStorage.getItem('rescue_logs');
-  const localStartTime = localStorage.getItem('rescue_start_time');
 
   // 初始化人員
   if (localRoster) {
@@ -82,12 +80,7 @@ function initData() {
   }
 
   // 初始化任務時間
-  if (localStartTime) {
-    missionStartTime = new Date(localStartTime);
-  } else {
-    missionStartTime = new Date();
-    localStorage.setItem('rescue_start_time', missionStartTime.toISOString());
-  }
+  initMissionTimer();
 }
 
 function saveRoster() {
@@ -157,15 +150,89 @@ function triggerAudioSignal(pattern) {
 
 // --- 定時器邏輯 ---
 
-// 1. 任務持續總時間
-function startMissionTimer() {
-  setInterval(() => {
-    const elapsedMs = new Date() - missionStartTime;
-    const hours = String(Math.floor(elapsedMs / 3600000)).padStart(2, '0');
-    const minutes = String(Math.floor((elapsedMs % 3600000) / 60000)).padStart(2, '0');
-    const seconds = String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0');
-    document.getElementById('mission-timer').textContent = `${hours}:${minutes}:${seconds}`;
+// 1. 任務持續總時間 (手動控制)
+let isMissionRunning = false;
+let missionElapsedSeconds = 0; // 暫停時已走秒數
+let missionTimerInterval = null;
+let missionStartTimestamp = null; // 啟動時起始時間戳
+
+function initMissionTimer() {
+  const localIsRunning = localStorage.getItem('mission_is_running');
+  const localElapsed = localStorage.getItem('mission_elapsed_seconds');
+  const localStartTimestamp = localStorage.getItem('mission_start_timestamp');
+
+  if (localIsRunning === 'true') {
+    isMissionRunning = true;
+    missionStartTimestamp = new Date(localStartTimestamp);
+    startMissionTimerInterval();
+    updateStartBtnUI(true);
+  } else {
+    isMissionRunning = false;
+    missionElapsedSeconds = parseInt(localElapsed || '0', 10);
+    displayMissionTime(missionElapsedSeconds);
+    updateStartBtnUI(false);
+  }
+}
+
+function startMissionTimerInterval() {
+  if (missionTimerInterval) clearInterval(missionTimerInterval);
+  missionTimerInterval = setInterval(() => {
+    const elapsed = Math.floor((new Date() - missionStartTimestamp) / 1000);
+    displayMissionTime(elapsed);
   }, 1000);
+}
+
+function displayMissionTime(totalSeconds) {
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(Math.floor(totalSeconds % 60)).padStart(2, '0');
+  document.getElementById('mission-timer').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function updateStartBtnUI(running) {
+  const btn = document.getElementById('mission-start-btn');
+  if (btn) {
+    btn.innerHTML = running ? '⏸️' : '▶️';
+  }
+}
+
+function toggleMissionTimer() {
+  if (!isMissionRunning) {
+    // 啟動
+    isMissionRunning = true;
+    missionStartTimestamp = new Date(new Date().getTime() - missionElapsedSeconds * 1000);
+    localStorage.setItem('mission_start_timestamp', missionStartTimestamp.toISOString());
+    localStorage.setItem('mission_is_running', 'true');
+    startMissionTimerInterval();
+    updateStartBtnUI(true);
+    addLog('auto', '【任務計時】安全官啟動了任務時間計時。');
+  } else {
+    // 暫停
+    isMissionRunning = false;
+    if (missionTimerInterval) clearInterval(missionTimerInterval);
+    missionElapsedSeconds = Math.floor((new Date() - missionStartTimestamp) / 1000);
+    localStorage.setItem('mission_elapsed_seconds', missionElapsedSeconds.toString());
+    localStorage.setItem('mission_is_running', 'false');
+    updateStartBtnUI(false);
+    addLog('auto', '【任務計時】安全官暫停了任務時間計時。');
+  }
+  renderLogs();
+}
+
+function resetMissionTimer() {
+  if (confirm('確定要將任務時間重設為 00:00:00 嗎？')) {
+    isMissionRunning = false;
+    if (missionTimerInterval) clearInterval(missionTimerInterval);
+    missionElapsedSeconds = 0;
+    missionStartTimestamp = null;
+    localStorage.setItem('mission_elapsed_seconds', '0');
+    localStorage.setItem('mission_is_running', 'false');
+    localStorage.removeItem('mission_start_timestamp');
+    displayMissionTime(0);
+    updateStartBtnUI(false);
+    addLog('auto', '【任務計時】安全官將任務時間重設為零。');
+    renderLogs();
+  }
 }
 
 // 2. 安全官無線電回報定時提醒
@@ -260,6 +327,10 @@ function setupEventListeners() {
   document.getElementById('play-evac-audio').addEventListener('click', () => triggerAudioSignal('evacuate'));
   document.getElementById('play-quiet-audio').addEventListener('click', () => triggerAudioSignal('quiet'));
   document.getElementById('play-resume-audio').addEventListener('click', () => triggerAudioSignal('resume'));
+
+  // 任務時間控制按鈕
+  document.getElementById('mission-start-btn').addEventListener('click', toggleMissionTimer);
+  document.getElementById('mission-reset-btn').addEventListener('click', resetMissionTimer);
 
   // 重設無線電計時器
   document.getElementById('reset-radio-timer-btn').addEventListener('click', () => {

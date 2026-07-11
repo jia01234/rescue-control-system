@@ -307,7 +307,7 @@ body {
 
 @media (min-width: 768px) {
   .board-columns {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1219,29 +1219,42 @@ body {
   font-size: 1.25rem;
 }
 
-/* 開始計時按鈕 */
-.start-timer-btn {
-  background: linear-gradient(135deg, #059669, #10b981) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
-  transition: all 0.2s;
-  display: inline-flex;
+/* 頂部任務時間控制組 */
+.timer-controls-container {
+  display: flex;
   align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+}
+
+.timer-btn-group {
+  display: flex;
   gap: 4px;
 }
 
-.start-timer-btn:hover {
-  background: linear-gradient(135deg, #047857, #059669) !important;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.5);
-  transform: translateY(-1px);
+.btn-timer-ctrl {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
 }
 
-.start-timer-btn:active {
-  transform: translateY(0);
+.btn-timer-ctrl:hover {
+  background: var(--color-primary-glow);
+  border-color: var(--color-primary);
+  transform: scale(1.08);
+}
+
+.btn-timer-ctrl:active {
+  transform: scale(0.95);
 }
