@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <!-- 全局警報覆蓋層 (緊急撤離時閃爍) -->
@@ -97,6 +97,25 @@
                 <div class="member-list" id="list-hotzone">
                   <!-- 動態生成成員卡片 -->
                 </div>
+              </div>
+            </div>
+
+            <!-- 看板底部快速日誌輸入與預設字快捷區 -->
+            <div class="board-quick-log-panel">
+              <div class="quick-tags-container">
+                <span class="quick-tag-label">預設常用字：</span>
+                <div class="quick-tags-list">
+                  <span class="tag-chip" data-text="發現患者">發現患者</span>
+                  <span class="tag-chip" data-text="支撐作業">支撐作業</span>
+                  <span class="tag-chip" data-text="破壞作業">破壞作業</span>
+                  <span class="tag-chip" data-text="探測">探測</span>
+                  <span class="tag-chip" data-text="繩索救援">繩索救援</span>
+                  <span class="tag-chip" data-text="搬運患者">搬運患者</span>
+                </div>
+              </div>
+              <div class="log-input-group">
+                <input type="text" id="board-manual-log-input" placeholder="在此輸入或選取預設字記錄...">
+                <button id="board-add-manual-log-btn" class="btn btn-primary">記錄</button>
               </div>
             </div>
           </div>
@@ -326,6 +345,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

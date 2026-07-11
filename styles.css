@@ -1286,3 +1286,64 @@ body {
   border-bottom: 2px solid var(--color-primary);
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* 看板底部快速日誌輸入面板 */
+.board-quick-log-panel {
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.quick-tags-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-tag-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.quick-tags-list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quick-tags-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tag-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tag-chip:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.tag-chip:active {
+  transform: scale(0.95);
+}

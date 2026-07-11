@@ -361,6 +361,36 @@ function setupEventListeners() {
     if (e.key === 'Enter') addManualLog();
   });
 
+  // 看板第一頁快速日誌與預設字
+  const boardLogInput = document.getElementById('board-manual-log-input');
+  document.getElementById('board-add-manual-log-btn').addEventListener('click', () => {
+    const text = boardLogInput.value.trim();
+    if (text) {
+      addLog('manual', text);
+      boardLogInput.value = '';
+      renderLogs();
+      triggerAudioSignal('warning');
+    }
+  });
+  boardLogInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const text = boardLogInput.value.trim();
+      if (text) {
+        addLog('manual', text);
+        boardLogInput.value = '';
+        renderLogs();
+        triggerAudioSignal('warning');
+      }
+    }
+  });
+  document.querySelectorAll('.tag-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const text = chip.getAttribute('data-text');
+      boardLogInput.value = text;
+      boardLogInput.focus();
+    });
+  });
+
   // 匯出 CSV 日誌
   document.getElementById('export-log-btn').addEventListener('click', exportLogsToCSV);
 
