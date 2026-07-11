@@ -1265,3 +1265,24 @@ body {
   border-color: var(--color-primary) !important;
   box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.15);
 }
+
+/* 可編輯的撤離區輸入框 */
+.zone-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.zone-input:focus {
+  outline: none;
+  border-bottom: 2px solid var(--color-primary);
+  background: rgba(255, 255, 255, 0.08);
+}

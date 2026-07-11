@@ -28,8 +28,7 @@ let logs = [];
 let activeTeam = 'A'; // 當前在管制看板顯示的小隊 A 或 B
 let selectedMemberForSheet = null; // 當前在 Bottom Sheet 操作的人員 ID
 let missionStartTime = null;
-let radioTimerSeconds = 1200; // 預設 20 分鐘 (1200秒)
-let radioTimerInterval = null;
+let evacZones = ["前進指揮站", "車輛停放區", "Boo"];
 let activeTimers = {}; // 記錄各熱區人員的計時器
 let loopEvacAlertInterval = null; // 全面撤離的音效循環定時器
 
@@ -40,7 +39,6 @@ let audioCtx = null;
 document.addEventListener('DOMContentLoaded', () => {
   initData();
   setupEventListeners();
-  startRadioTimer();
   renderAll();
 });
 
@@ -81,6 +79,22 @@ function initData() {
 
   // 初始化任務時間
   initMissionTimer();
+
+  // 初始化撤離區
+  const localZones = localStorage.getItem('rescue_evac_zones');
+  if (localZones) {
+    evacZones = JSON.parse(localZones);
+  }
+  document.getElementById('evac-zone-1').value = evacZones[0];
+  document.getElementById('evac-zone-2').value = evacZones[1];
+  document.getElementById('evac-zone-3').value = evacZones[2];
+  updateOverlayZones();
+}
+
+function updateOverlayZones() {
+  document.getElementById('overlay-zone-1').textContent = evacZones[0];
+  document.getElementById('overlay-zone-2').textContent = evacZones[1];
+  document.getElementById('overlay-zone-3').textContent = evacZones[2];
 }
 
 function saveRoster() {
@@ -332,12 +346,13 @@ function setupEventListeners() {
   document.getElementById('mission-start-btn').addEventListener('click', toggleMissionTimer);
   document.getElementById('mission-reset-btn').addEventListener('click', resetMissionTimer);
 
-  // 重設無線電計時器
-  document.getElementById('reset-radio-timer-btn').addEventListener('click', () => {
-    radioTimerSeconds = 1200;
-    document.querySelector('.timer-reminder').classList.remove('alerting');
-    addLog('auto', '無線電安全回報計時器已由安全官重設為 20 分鐘。');
-    triggerAudioSignal('warning');
+  // 監聽並儲存自訂撤離區
+  ['evac-zone-1', 'evac-zone-2', 'evac-zone-3'].forEach((id, index) => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      evacZones[index] = e.target.value.trim() || `撤離區 ${index + 1}`;
+      localStorage.setItem('rescue_evac_zones', JSON.stringify(evacZones));
+      updateOverlayZones();
+    });
   });
 
   // 手動新增日誌
@@ -494,7 +509,7 @@ function renderLogs() {
 
     entry.className = `log-entry ${logClass}`;
     
-    const timeStr = new Date(log.time).toLocaleTimeString('zh-TW', { hour12: false });
+    const timeStr = new Date(log.time).toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
     entry.innerHTML = `<span class="time">[${timeStr}]</span>${log.text}`;
     logList.appendChild(entry);
   });
@@ -583,37 +598,22 @@ function changeMemberStatus(id, newStatus) {
   member.status = newStatus;
 
   if (newStatus === 'hotzone') {
-    // 進入熱區：初始設定「未啟動計時」
+    // 進入熱區
     member.timerStarted = false;
-    member.entryTime = null;
+    member.entryTime = new Date().toISOString();
     member.lastDuration = 0;
-    addLog('auto', `【人員部署】${member.team}組 隊員【${member.name}】部署至危險工作區，等待安全官點擊啟動計時。`);
-    
-    // 智慧提醒：觸發「工作場地評估表」提醒
-    showFormReminder('worksite');
+    addLog('auto', `【人員部署】${member.team}組 隊員【${member.name}】部署至危險工作區。`);
   } 
-  else if (newStatus === 'returned') {
-    // 返回：計算總作業時間，清除進入時間
-    if (member.entryTime && member.timerStarted) {
-      const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
-      member.lastDuration = elapsed;
-      addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】已返回安全區，工作時間：${formatSeconds(elapsed)}。`);
+  else if (newStatus === 'standby') {
+    // 從熱區返回待命
+    if (oldStatus === 'hotzone') {
+      addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】已自熱區安全撤離，回到站外待命。`);
     } else {
-      member.lastDuration = 0;
-      addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】未啟動計時即返回安全區。`);
+      addLog('auto', `【人員異動】${member.team}組 隊員【${member.name}】設定為待命狀態。`);
     }
     member.entryTime = null;
     member.timerStarted = false;
-    
-    // 智慧提醒：觸發「受困者解救表」提醒
-    showFormReminder('victim');
-  } 
-  else if (newStatus === 'standby') {
-    // 回到待命
-    member.entryTime = null;
-    member.timerStarted = false;
     member.lastDuration = 0;
-    addLog('auto', `【人員異動】${member.team}組 隊員【${member.name}】重設至待命狀態。`);
   }
 
   saveRoster();
@@ -682,36 +682,7 @@ window.deleteMember = function(id) {
   }
 };
 
-// 智慧提醒標籤控制
-function showFormReminder(formType) {
-  if (formType === 'worksite') {
-    const badge = document.getElementById('badge-worksite-remind');
-    badge.classList.remove('hidden');
-    // 取消 checkbox 勾選
-    document.getElementById('chk-form-worksite').checked = false;
-    addLog('auto', '【提示】人員已進入熱區，請記得至外部申報網站填寫「工作場地評估表」。', 'danger');
-  } 
-  else if (formType === 'victim') {
-    const badge = document.getElementById('badge-victim-remind');
-    badge.classList.remove('hidden');
-    document.getElementById('chk-form-victim').checked = false;
-    addLog('auto', '【提示】人員返回安全區，請確認是否需要填寫「受困者解救表」。');
-  }
-}
 
-// 綁定檢核表 Checkbox 收回提醒
-document.getElementById('chk-form-worksite').addEventListener('change', function() {
-  if (this.checked) {
-    document.getElementById('badge-worksite-remind').classList.add('hidden');
-    addLog('auto', '安全官確認已完成「工作場地評估表」線上申報。');
-  }
-});
-document.getElementById('chk-form-victim').addEventListener('change', function() {
-  if (this.checked) {
-    document.getElementById('badge-victim-remind').classList.add('hidden');
-    addLog('auto', '安全官確認已完成「受困者解救表」線上申報。');
-  }
-});
 
 // --- 全面緊急撤離機制 ---
 function triggerGlobalEvacuation() {
@@ -859,7 +830,7 @@ function exportLogsToCSV() {
   csvContent += "時間,日誌類型,內容\n";
 
   logs.forEach(log => {
-    const timeStr = new Date(log.time).toLocaleString('zh-TW', { hour12: false });
+    const timeStr = new Date(log.time).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
     const cleanText = log.text.replace(/"/g, '""'); // 雙引號跳脫
     csvContent += `"${timeStr}","${log.type}","${cleanText}"\n`;
   });

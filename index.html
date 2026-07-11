@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <!-- 全局警報覆蓋層 (緊急撤離時閃爍) -->
@@ -16,9 +16,9 @@
       <div class="alert-icon">🚨</div>
       <div class="alert-title">!!! 全面緊急撤離 !!!</div>
       <div class="alert-zones">
-        <p>1. 第一撤離區：<strong>前進指揮站</strong></p>
-        <p>2. 第二撤離區：<strong>車輛停放區</strong></p>
-        <p>3. 第三撤離區：<strong>Boo</strong></p>
+        <p>1. 第一撤離區：<strong id="overlay-zone-1">前進指揮站</strong></p>
+        <p>2. 第二撤離區：<strong id="overlay-zone-2">車輛停放區</strong></p>
+        <p>3. 第三撤離區：<strong id="overlay-zone-3">Boo</strong></p>
       </div>
       <button id="close-overlay-btn" class="btn btn-secondary">關閉警示畫面</button>
     </div>
@@ -120,15 +120,15 @@
             <div class="zone-list">
               <div class="zone-item">
                 <span class="zone-num">1</span>
-                <span class="zone-name">前進指揮站</span>
+                <input type="text" id="evac-zone-1" class="zone-input" value="前進指揮站" placeholder="第一撤離區">
               </div>
               <div class="zone-item">
                 <span class="zone-num">2</span>
-                <span class="zone-name">車輛停放區</span>
+                <input type="text" id="evac-zone-2" class="zone-input" value="車輛停放區" placeholder="第二撤離區">
               </div>
               <div class="zone-item">
                 <span class="zone-num">3</span>
-                <span class="zone-name">Boo</span>
+                <input type="text" id="evac-zone-3" class="zone-input" value="Boo" placeholder="第三撤離區">
               </div>
             </div>
           </div>
@@ -174,65 +174,25 @@
         </div>
       </section>
 
-      <!-- 頁籤三：日誌與提醒 -->
+      <!-- 頁籤三：安全日誌 -->
       <section id="tab-logs" class="tab-panel">
-        <div class="panel-grid">
-          <!-- 智慧提醒與檢核表 -->
-          <div class="panel-card">
-            <h3 class="card-title">安全提醒與報表申報</h3>
-            
-            <div class="reminder-section">
-              <!-- 定時無線電確認 -->
-              <div class="reminder-box timer-reminder">
-                <div class="reminder-info">
-                  <h4>無線電安全回報 (Radio Check)</h4>
-                  <p>每 20 分鐘需確認熱區小隊安全狀態</p>
-                  <span id="radio-timer" class="time-countdown">20:00</span>
-                </div>
-                <button id="reset-radio-timer-btn" class="btn btn-sm btn-secondary">重設時間</button>
-              </div>
-
-              <!-- 表單填寫提醒 -->
-              <div class="checklist-container">
-                <h4 class="sub-title">外部報表提醒</h4>
-                <div class="checklist-item">
-                  <input type="checkbox" id="chk-form-worksite">
-                  <label for="chk-form-worksite">
-                    <strong>工作場地評估表 (最常用)</strong>
-                    <span class="desc">進入熱區工作時需登入系統填報</span>
-                  </label>
-                  <span class="badge badge-warning hidden" id="badge-worksite-remind">待填寫</span>
-                </div>
-                <div class="checklist-item">
-                  <input type="checkbox" id="chk-form-victim">
-                  <label for="chk-form-victim">
-                    <strong>受困者解救表 (最常用)</strong>
-                    <span class="desc">成功救出或移交受困者時填報</span>
-                  </label>
-                  <span class="badge badge-warning hidden" id="badge-victim-remind">待填寫</span>
-                </div>
-              </div>
+        <!-- 安全日誌 -->
+        <div class="panel-card">
+          <div class="card-header-flex">
+            <h3 class="card-title">安全官日誌 (Auto & Manual)</h3>
+            <div class="btn-group">
+              <button id="export-log-btn" class="btn btn-sm btn-success">匯出 CSV</button>
+              <button id="clear-log-btn" class="btn btn-sm btn-danger">清除</button>
             </div>
           </div>
+          
+          <div class="log-console" id="log-list">
+            <!-- 日誌內容 -->
+          </div>
 
-          <!-- 安全日誌 -->
-          <div class="panel-card">
-            <div class="card-header-flex">
-              <h3 class="card-title">安全官日誌 (Auto & Manual)</h3>
-              <div class="btn-group">
-                <button id="export-log-btn" class="btn btn-sm btn-success">匯出 CSV</button>
-                <button id="clear-log-btn" class="btn btn-sm btn-danger">清除</button>
-              </div>
-            </div>
-            
-            <div class="log-console" id="log-list">
-              <!-- 日誌內容 -->
-            </div>
-
-            <div class="log-input-group">
-              <input type="text" id="manual-log-input" placeholder="輸入自訂事件日誌（如：聽到瓦礫堆下有回應）">
-              <button id="add-manual-log-btn" class="btn btn-primary">記錄</button>
-            </div>
+          <div class="log-input-group">
+            <input type="text" id="manual-log-input" placeholder="輸入自訂事件日誌（如：聽到瓦礫堆下有回應）">
+            <button id="add-manual-log-btn" class="btn btn-primary">記錄</button>
           </div>
         </div>
       </section>
@@ -281,7 +241,7 @@
       </button>
       <button class="nav-btn" data-tab="tab-logs">
         <span class="icon">📝</span>
-        <span class="label">日誌提醒</span>
+        <span class="label">安全日誌</span>
       </button>
       <button class="nav-btn" data-tab="tab-roster">
         <span class="icon">👥</span>
@@ -366,6 +326,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
