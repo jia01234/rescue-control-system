@@ -92,9 +92,12 @@ function initData() {
 }
 
 function updateOverlayZones() {
-  document.getElementById('overlay-zone-1').textContent = evacZones[0];
-  document.getElementById('overlay-zone-2').textContent = evacZones[1];
-  document.getElementById('overlay-zone-3').textContent = evacZones[2];
+  const z1 = document.getElementById('overlay-zone-1');
+  const z2 = document.getElementById('overlay-zone-2');
+  const z3 = document.getElementById('overlay-zone-3');
+  if (z1) z1.textContent = evacZones[0];
+  if (z2) z2.textContent = evacZones[1];
+  if (z3) z3.textContent = evacZones[2];
 }
 
 function saveRoster() {
