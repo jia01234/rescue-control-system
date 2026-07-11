@@ -410,18 +410,15 @@ function renderAll() {
 function renderBoard() {
   const listStandby = document.getElementById('list-standby');
   const listHotzone = document.getElementById('list-hotzone');
-  const listReturned = document.getElementById('list-returned');
   const bannerEl = document.getElementById('team-exclusion-banner');
   const bannerTextEl = document.getElementById('banner-text');
 
   // 清空看板
   listStandby.innerHTML = '';
   listHotzone.innerHTML = '';
-  listReturned.innerHTML = '';
 
   let countS = 0;
   let countH = 0;
-  let countR = 0;
 
   // 檢查另一組是否有成員在熱區中，進行互斥警示
   const otherTeam = activeTeam === 'A' ? 'B' : 'A';
@@ -447,6 +444,13 @@ function renderBoard() {
   const activeMembers = roster.filter(m => m.team === activeTeam);
 
   activeMembers.forEach(member => {
+    // 防呆相容舊資料：若狀態是 returned 則自動導回 standby
+    if (member.status === 'returned') {
+      member.status = 'standby';
+      member.entryTime = null;
+      member.timerStarted = false;
+    }
+
     const card = document.createElement('div');
     card.className = `member-card ${member.status === 'hotzone' ? 'in-hotzone' : ''}`;
     card.setAttribute('data-id', member.id);
@@ -454,97 +458,26 @@ function renderBoard() {
     // 點擊卡片開啟底部變更狀態選單
     card.addEventListener('click', () => openStatusSheet(member));
 
-    // 時間與計時按鈕顯示邏輯
-    let timeHtml = '';
-    let startButtonHtml = '';
-    
-    if (member.status === 'hotzone') {
-      if (member.timerStarted && member.entryTime) {
-        card.classList.add('active-timer');
-        const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
-        timeHtml = `<span>⏱️</span> <span class="timer-value">${formatSeconds(elapsed)}</span>`;
-        
-        // 超時 20 分鐘（1200秒）閃爍警示
-        if (elapsed >= 1200) {
-          card.classList.add('overtime');
-        }
-      } else {
-        // 未啟動計時，顯示開始計時按鈕與提示字
-        startButtonHtml = `<button class="start-timer-btn" onclick="startMemberTimer('${member.id}', event)">▶️ 開始計時</button>`;
-        timeHtml = `<span class="timer-value" style="color: var(--color-text-muted);">等待計時</span>`;
-      }
-    } else if (member.status === 'returned') {
-      if (member.lastDuration) {
-        timeHtml = `<span>⏱️</span> <span class="timer-value">${formatSeconds(member.lastDuration)}</span>`;
-      } else {
-        timeHtml = `<span class="timer-value" style="color: var(--color-text-muted);">無計時</span>`;
-      }
-    } else {
-      timeHtml = `<span>⏱️</span> <span class="timer-value">--:--</span>`;
-    }
-
     card.innerHTML = `
       <div class="member-info">
         <span class="member-name">${member.name}</span>
         <span class="member-team-label">搜救 ${member.team} 組</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        ${startButtonHtml}
-        <div class="member-time">
-          ${timeHtml}
-        </div>
-      </div>
     `;
 
-    // 派發到對應的欄位
-    if (member.status === 'standby') {
-      listStandby.appendChild(card);
-      countS++;
-    } else if (member.status === 'hotzone') {
+    // 派發到對應的二欄位
+    if (member.status === 'hotzone') {
       listHotzone.appendChild(card);
       countH++;
-    } else if (member.status === 'returned') {
-      listReturned.appendChild(card);
-      countR++;
+    } else {
+      listStandby.appendChild(card);
+      countS++;
     }
   });
 
   // 更新小隊看板的欄位人數計數器
   document.getElementById('count-standby').textContent = countS;
   document.getElementById('count-hotzone').textContent = countH;
-  document.getElementById('count-returned').textContent = countR;
-
-  // 啟動或重設看板時間即時刷新計時器
-  startLiveCardTimer();
-}
-
-// 即時刷新看板中「熱區人員」卡片的時間
-let cardTimerInterval = null;
-function startLiveCardTimer() {
-  if (cardTimerInterval) clearInterval(cardTimerInterval);
-  
-  cardTimerInterval = setInterval(() => {
-    const activeTimerCards = document.querySelectorAll('.member-card.in-hotzone');
-    activeTimerCards.forEach(card => {
-      const id = card.getAttribute('data-id');
-      const member = roster.find(m => m.id === id);
-      // 只有啟動計時且有 entryTime 時才更新時間
-      if (member && member.status === 'hotzone' && member.timerStarted && member.entryTime) {
-        const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
-        const timerValEl = card.querySelector('.timer-value');
-        if (timerValEl) {
-          timerValEl.textContent = formatSeconds(elapsed);
-        }
-        
-        // 檢查超時
-        if (elapsed >= 1200) {
-          card.classList.add('overtime');
-        } else {
-          card.classList.remove('overtime');
-        }
-      }
-    });
-  }, 1000);
 }
 
 // 2. 日誌渲染
