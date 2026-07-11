@@ -340,6 +340,8 @@ function renderBoard() {
   const listStandby = document.getElementById('list-standby');
   const listHotzone = document.getElementById('list-hotzone');
   const listReturned = document.getElementById('list-returned');
+  const bannerEl = document.getElementById('team-exclusion-banner');
+  const bannerTextEl = document.getElementById('banner-text');
 
   // 清空看板
   listStandby.innerHTML = '';
@@ -349,6 +351,26 @@ function renderBoard() {
   let countS = 0;
   let countH = 0;
   let countR = 0;
+
+  // 檢查另一組是否有成員在熱區中，進行互斥警示
+  const otherTeam = activeTeam === 'A' ? 'B' : 'A';
+  const isOtherTeamActive = roster.some(m => m.team === otherTeam && m.status === 'hotzone');
+  
+  if (isOtherTeamActive) {
+    bannerEl.className = 'exclusion-banner danger';
+    bannerTextEl.textContent = `管制警告：【搜救 ${otherTeam} 組】目前正在熱區出勤中！本隊（${activeTeam}組）已鎖定為待命備援，禁止移入熱區。`;
+    bannerEl.classList.remove('hidden');
+  } else {
+    // 檢查自己這組是否有成員在熱區中，顯示正常管制提示
+    const isCurrentTeamActive = roster.some(m => m.team === activeTeam && m.status === 'hotzone');
+    if (isCurrentTeamActive) {
+      bannerEl.className = 'exclusion-banner';
+      bannerTextEl.textContent = `管制提示：【搜救 ${activeTeam} 組】正在熱區作業中。此時【搜救 ${otherTeam} 組】已自動鎖定於指揮站待命。`;
+      bannerEl.classList.remove('hidden');
+    } else {
+      bannerEl.classList.add('hidden');
+    }
+  }
 
   // 篩選當前選擇小隊且不在預備名單的人員
   const activeMembers = roster.filter(m => m.team === activeTeam);
@@ -361,19 +383,33 @@ function renderBoard() {
     // 點擊卡片開啟底部變更狀態選單
     card.addEventListener('click', () => openStatusSheet(member));
 
-    // 時間顯示邏輯
-    let timeText = '--:--';
-    if (member.status === 'hotzone' && member.entryTime) {
-      card.classList.add('active-timer');
-      const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
-      timeText = formatSeconds(elapsed);
-      
-      // 超時 20 分鐘（1200秒）閃爍警示
-      if (elapsed >= 1200) {
-        card.classList.add('overtime');
+    // 時間與計時按鈕顯示邏輯
+    let timeHtml = '';
+    let startButtonHtml = '';
+    
+    if (member.status === 'hotzone') {
+      if (member.timerStarted && member.entryTime) {
+        card.classList.add('active-timer');
+        const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
+        timeHtml = `<span>⏱️</span> <span class="timer-value">${formatSeconds(elapsed)}</span>`;
+        
+        // 超時 20 分鐘（1200秒）閃爍警示
+        if (elapsed >= 1200) {
+          card.classList.add('overtime');
+        }
+      } else {
+        // 未啟動計時，顯示開始計時按鈕與提示字
+        startButtonHtml = `<button class="start-timer-btn" onclick="startMemberTimer('${member.id}', event)">▶️ 開始計時</button>`;
+        timeHtml = `<span class="timer-value" style="color: var(--color-text-muted);">等待計時</span>`;
       }
-    } else if (member.status === 'returned' && member.lastDuration) {
-      timeText = formatSeconds(member.lastDuration);
+    } else if (member.status === 'returned') {
+      if (member.lastDuration) {
+        timeHtml = `<span>⏱️</span> <span class="timer-value">${formatSeconds(member.lastDuration)}</span>`;
+      } else {
+        timeHtml = `<span class="timer-value" style="color: var(--color-text-muted);">無計時</span>`;
+      }
+    } else {
+      timeHtml = `<span>⏱️</span> <span class="timer-value">--:--</span>`;
     }
 
     card.innerHTML = `
@@ -381,8 +417,11 @@ function renderBoard() {
         <span class="member-name">${member.name}</span>
         <span class="member-team-label">搜救 ${member.team} 組</span>
       </div>
-      <div class="member-time">
-        <span>⏱️</span> <span class="timer-value" data-entry="${member.entryTime || ''}" data-duration="${member.lastDuration || 0}">${timeText}</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        ${startButtonHtml}
+        <div class="member-time">
+          ${timeHtml}
+        </div>
       </div>
     `;
 
@@ -418,7 +457,8 @@ function startLiveCardTimer() {
     activeTimerCards.forEach(card => {
       const id = card.getAttribute('data-id');
       const member = roster.find(m => m.id === id);
-      if (member && member.entryTime) {
+      // 只有啟動計時且有 entryTime 時才更新時間
+      if (member && member.status === 'hotzone' && member.timerStarted && member.entryTime) {
         const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
         const timerValEl = card.querySelector('.timer-value');
         if (timerValEl) {
@@ -526,27 +566,40 @@ function changeMemberStatus(id, newStatus) {
   const oldStatus = member.status;
   if (oldStatus === newStatus) return;
 
+  // 1. 小隊出勤互斥檢查
+  if (newStatus === 'hotzone') {
+    const otherTeam = member.team === 'A' ? 'B' : 'A';
+    const isOtherTeamActive = roster.some(m => m.team === otherTeam && m.status === 'hotzone');
+    if (isOtherTeamActive) {
+      alert(`⚠️ 出勤管制警告！\n\n目前【搜救 ${otherTeam} 組】正在熱區作業中。\n依安全管制規定，A、B 兩小隊不可同時進入熱區，另一小隊必須在站外待命備援，以利緊急救援 (RIT)！`);
+      return;
+    }
+  }
+
   member.status = newStatus;
 
   if (newStatus === 'hotzone') {
-    // 進入熱區：開始計時，寫入時間
-    member.entryTime = new Date().toISOString();
+    // 進入熱區：初始設定「未啟動計時」
+    member.timerStarted = false;
+    member.entryTime = null;
     member.lastDuration = 0;
-    addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】進入危險工作區。`);
+    addLog('auto', `【人員部署】${member.team}組 隊員【${member.name}】部署至危險工作區，等待安全官點擊啟動計時。`);
     
     // 智慧提醒：觸發「工作場地評估表」提醒
     showFormReminder('worksite');
   } 
   else if (newStatus === 'returned') {
     // 返回：計算總作業時間，清除進入時間
-    if (member.entryTime) {
+    if (member.entryTime && member.timerStarted) {
       const elapsed = Math.floor((new Date() - new Date(member.entryTime)) / 1000);
       member.lastDuration = elapsed;
       addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】已返回安全區，工作時間：${formatSeconds(elapsed)}。`);
     } else {
-      addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】移至返回區。`);
+      member.lastDuration = 0;
+      addLog('auto', `【人員進出】${member.team}組 隊員【${member.name}】未啟動計時即返回安全區。`);
     }
     member.entryTime = null;
+    member.timerStarted = false;
     
     // 智慧提醒：觸發「受困者解救表」提醒
     showFormReminder('victim');
@@ -554,6 +607,7 @@ function changeMemberStatus(id, newStatus) {
   else if (newStatus === 'standby') {
     // 回到待命
     member.entryTime = null;
+    member.timerStarted = false;
     member.lastDuration = 0;
     addLog('auto', `【人員異動】${member.team}組 隊員【${member.name}】重設至待命狀態。`);
   }
@@ -562,6 +616,30 @@ function changeMemberStatus(id, newStatus) {
   renderAll();
   triggerAudioSignal('warning');
 }
+
+// 啟動特定隊員的作業計時器
+window.startMemberTimer = function(id, event) {
+  if (event) event.stopPropagation(); // 阻止觸發卡片點擊彈出 Bottom Sheet
+  
+  const member = roster.find(m => m.id === id);
+  if (!member) return;
+
+  // 安全雙重防呆：檢查另一組此時是否在熱區
+  const otherTeam = member.team === 'A' ? 'B' : 'A';
+  const isOtherTeamActive = roster.some(m => m.team === otherTeam && m.status === 'hotzone');
+  if (isOtherTeamActive) {
+    alert(`⚠️ 管制警告！目前【搜救 ${otherTeam} 組】正在熱區作業，兩組不可同時在熱區出勤！`);
+    return;
+  }
+
+  member.timerStarted = true;
+  member.entryTime = new Date().toISOString();
+  saveRoster();
+  
+  addLog('auto', `【計時啟動】${member.team}組 隊員【${member.name}】開始計算作業時間。`);
+  renderAll();
+  triggerAudioSignal('warning');
+};
 
 // 調動小隊編組 (供名冊編輯調動 A/B/預備)
 window.moveMemberTeam = function(id, targetTeam) {
@@ -667,10 +745,13 @@ function evacAllHotZoneMembers() {
 
   hotzoneMembers.forEach(m => {
     m.status = 'returned';
-    if (m.entryTime) {
+    if (m.entryTime && m.timerStarted) {
       m.lastDuration = Math.floor((new Date() - new Date(m.entryTime)) / 1000);
+    } else {
+      m.lastDuration = 0;
     }
     m.entryTime = null;
+    m.timerStarted = false;
   });
 
   saveRoster();
@@ -707,7 +788,11 @@ function openHotzoneModal() {
     container.innerHTML = `<div class="no-hot-members">✅ 熱區目前安全，無作業人員。</div>`;
   } else {
     hotMembers.forEach(m => {
-      const elapsed = Math.floor((new Date() - new Date(m.entryTime)) / 1000);
+      let timeText = '待命計時';
+      if (m.timerStarted && m.entryTime) {
+        const elapsed = Math.floor((new Date() - new Date(m.entryTime)) / 1000);
+        timeText = formatSeconds(elapsed);
+      }
       const div = document.createElement('div');
       div.className = 'hot-query-item';
       div.innerHTML = `
@@ -715,7 +800,7 @@ function openHotzoneModal() {
           <span class="name">${m.name}</span>
           <span class="badge badge-warning" style="margin-left: 8px;">${m.team}組</span>
         </div>
-        <span class="timer">${formatSeconds(elapsed)}</span>
+        <span class="timer">${timeText}</span>
       `;
       container.appendChild(div);
     });

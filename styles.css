@@ -1190,3 +1190,58 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* 互斥出勤警告橫幅 */
+.exclusion-banner {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed var(--color-warning);
+  color: var(--color-warning);
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  animation: fadeIn 0.3s ease;
+  line-height: 1.4;
+}
+
+.exclusion-banner.danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  animation: cardWarningPulse 1.5s infinite alternate;
+}
+
+.exclusion-banner .banner-icon {
+  font-size: 1.25rem;
+}
+
+/* 開始計時按鈕 */
+.start-timer-btn {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.start-timer-btn:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.start-timer-btn:active {
+  transform: translateY(0);
+}
