@@ -383,11 +383,24 @@ function setupEventListeners() {
       }
     }
   });
-  document.querySelectorAll('.tag-chip').forEach(chip => {
+  // 看板第一頁的預設字點擊 (累加文字，不覆蓋)
+  document.querySelectorAll('.board-quick-log-panel .tag-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const text = chip.getAttribute('data-text');
-      boardLogInput.value = text;
+      const currentVal = boardLogInput.value.trim();
+      boardLogInput.value = currentVal ? `${currentVal} ${text}` : text;
       boardLogInput.focus();
+    });
+  });
+
+  // 安全日誌頁面中的預設字點擊 (累加文字，不覆蓋)
+  const mainLogInput = document.getElementById('manual-log-input');
+  document.querySelectorAll('#tab-logs .tag-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const text = chip.getAttribute('data-text');
+      const currentVal = mainLogInput.value.trim();
+      mainLogInput.value = currentVal ? `${currentVal} ${text}` : text;
+      mainLogInput.focus();
     });
   });
 
