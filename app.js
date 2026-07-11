@@ -386,7 +386,24 @@ function setupEventListeners() {
   // 看板第一頁的預設字點擊 (累加文字，不覆蓋)
   document.querySelectorAll('.board-quick-log-panel .tag-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const text = chip.getAttribute('data-text');
+      let text = chip.getAttribute('data-text');
+      if (text === 'current_time') {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('zh-TW', {
+          timeZone: 'Asia/Taipei',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        let minute = '00', second = '00';
+        parts.forEach(p => {
+          if (p.type === 'minute') minute = p.value;
+          if (p.type === 'second') second = p.value;
+        });
+        text = `${minute}分${second}秒`;
+      }
       const currentVal = boardLogInput.value.trim();
       boardLogInput.value = currentVal ? `${currentVal} ${text}` : text;
       boardLogInput.focus();
@@ -397,7 +414,24 @@ function setupEventListeners() {
   const mainLogInput = document.getElementById('manual-log-input');
   document.querySelectorAll('#tab-logs .tag-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const text = chip.getAttribute('data-text');
+      let text = chip.getAttribute('data-text');
+      if (text === 'current_time') {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('zh-TW', {
+          timeZone: 'Asia/Taipei',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        let minute = '00', second = '00';
+        parts.forEach(p => {
+          if (p.type === 'minute') minute = p.value;
+          if (p.type === 'second') second = p.value;
+        });
+        text = `${minute}分${second}秒`;
+      }
       const currentVal = mainLogInput.value.trim();
       mainLogInput.value = currentVal ? `${currentVal} ${text}` : text;
       mainLogInput.focus();
@@ -487,15 +521,8 @@ function renderBoard() {
     bannerTextEl.textContent = `管制警告：【搜救 ${otherTeam} 組】目前正在熱區出勤中！本隊（${activeTeam}組）已鎖定為待命備援，禁止移入熱區。`;
     bannerEl.classList.remove('hidden');
   } else {
-    // 檢查自己這組是否有成員在熱區中，顯示正常管制提示
-    const isCurrentTeamActive = roster.some(m => m.team === activeTeam && m.status === 'hotzone');
-    if (isCurrentTeamActive) {
-      bannerEl.className = 'exclusion-banner';
-      bannerTextEl.textContent = `管制提示：【搜救 ${activeTeam} 組】正在熱區作業中。此時【搜救 ${otherTeam} 組】已自動鎖定於指揮站待命。`;
-      bannerEl.classList.remove('hidden');
-    } else {
-      bannerEl.classList.add('hidden');
-    }
+    // 自己這隊在熱區中，不顯示提示，隱藏橫幅以省空間
+    bannerEl.classList.add('hidden');
   }
 
   // 篩選當前選擇小隊且不在預備名單的人員
