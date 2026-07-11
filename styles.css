@@ -810,33 +810,113 @@ body {
   margin-bottom: 12px;
 }
 
-.log-entry {
+/* 新式安全日誌流 (v2 Timeline Styles) */
+.log-entry-v2 {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
   line-height: 1.4;
-  padding: 4px 6px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.2s;
 }
 
-.log-entry .time {
-  color: var(--color-primary);
-  margin-right: 6px;
+.log-time-v2 {
+  font-size: 0.8rem;
+  font-family: monospace;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+  margin-right: 8px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.log-icon-v2 {
+  margin-right: 8px;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
+
+.log-text-v2 {
+  word-break: break-all;
+}
+
+/* 1. 流水帳：進出人員等（小字、淡灰色、無底色） */
+.log-flow {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 4px 12px;
+}
+
+.log-flow .log-time-v2 {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* 2. 關鍵戰術紅色卡片（發現患者、搬運患者） */
+.log-tactical-red {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
   font-weight: 700;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.1);
 }
 
-.log-entry.log-auto {
-  color: #cbd5e1;
+.log-tactical-red .log-time-v2 {
+  color: rgba(248, 113, 113, 0.7);
 }
 
-.log-entry.log-manual {
-  color: var(--color-warning);
-  border-left: 2px solid var(--color-warning);
-  background: rgba(245, 158, 11, 0.04);
-}
-
-.log-entry.log-danger {
-  color: var(--color-danger);
+/* 3. 關鍵戰術黃色卡片（支撐作業、破壞作業、探測、繩索救援） */
+.log-tactical-yellow {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
   font-weight: 700;
-  background: var(--color-danger-bg);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.1);
+}
+
+.log-tactical-yellow .log-time-v2 {
+  color: rgba(251, 191, 36, 0.7);
+}
+
+/* 4. 關鍵戰術綠色卡片（工作開始、工作結束） */
+.log-tactical-green {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
+}
+
+.log-tactical-green .log-time-v2 {
+  color: rgba(52, 211, 153, 0.7);
+}
+
+/* 5. 手動自訂日誌藍色卡片 */
+.log-tactical-blue {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.log-tactical-blue .log-time-v2 {
+  color: rgba(96, 165, 250, 0.7);
+}
+
+/* 6. 緊急危險卡片 */
+.log-tactical-danger {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #fca5a5;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.log-tactical-danger .log-time-v2 {
+  color: rgba(252, 165, 165, 0.8);
 }
 
 .log-input-group {

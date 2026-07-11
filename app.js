@@ -727,22 +727,44 @@ function renderBoard() {
   document.getElementById('count-hotzone').textContent = countH;
 }
 
-// 2. 日誌渲染
+// 2. 日誌渲染 (支援智慧分類與視覺色彩高亮分流)
 function renderLogs() {
   const logList = document.getElementById('log-list');
   logList.innerHTML = '';
 
-  // 從新到舊排序顯示（底端為最新）
   logs.forEach(log => {
     const entry = document.createElement('div');
-    let logClass = 'log-auto';
-    if (log.type === 'manual') logClass = 'log-manual';
-    if (log.type === 'danger') logClass = 'log-danger';
-
-    entry.className = `log-entry ${logClass}`;
-    
     const timeStr = new Date(log.time).toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-    entry.innerHTML = `<span class="time">[${timeStr}]</span>${log.text}`;
+    
+    // 預設分類為流水帳（小字、淡灰）
+    let logClass = 'log-flow';
+    let icon = '•';
+    const text = log.text;
+    
+    // 檢查關鍵字與類型進行分類
+    if (text.includes('發現患者') || text.includes('搬運患者') || text.includes('犬最後確認')) {
+      logClass = 'log-tactical-red';
+      icon = '🚨';
+    } else if (text.includes('支撐作業') || text.includes('破壞作業') || text.includes('探測') || text.includes('繩索救援') || text.includes('INSARAG')) {
+      logClass = 'log-tactical-yellow';
+      icon = '🛠️';
+    } else if (text.includes('工作開始') || text.includes('工作結束') || text.includes('任務狀態')) {
+      logClass = 'log-tactical-green';
+      icon = '🏁';
+    } else if (log.type === 'danger' || text.includes('緊急撤離') || text.includes('撤離記錄') || text.includes('全部撤出')) {
+      logClass = 'log-tactical-danger';
+      icon = '⚠️';
+    } else if (log.type === 'manual') {
+      logClass = 'log-tactical-blue';
+      icon = '📝';
+    }
+
+    entry.className = `log-entry-v2 ${logClass}`;
+    entry.innerHTML = `
+      <span class="log-time-v2">${timeStr}</span>
+      <span class="log-icon-v2">${icon}</span>
+      <span class="log-text-v2">${text}</span>
+    `;
     logList.appendChild(entry);
   });
 
