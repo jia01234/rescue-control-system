@@ -488,7 +488,73 @@ function setupEventListeners() {
   });
 
   // 匯出 CSV 日誌
+  const exportModal = document.getElementById('csv-export-modal');
   document.getElementById('export-log-btn').addEventListener('click', exportLogsToCSV);
+  document.getElementById('close-export-modal').addEventListener('click', () => exportModal.classList.add('hidden'));
+  document.getElementById('cancel-export-csv').addEventListener('click', () => exportModal.classList.add('hidden'));
+  
+  // 匯出彈窗內全選/全不選
+  const selectAllCb = document.getElementById('export-select-all');
+  const cateCbs = document.querySelectorAll('.export-cate-checkbox');
+  selectAllCb.addEventListener('change', (e) => {
+    cateCbs.forEach(cb => {
+      cb.checked = e.target.checked;
+    });
+  });
+
+  // 點擊確認匯出
+  document.getElementById('confirm-export-csv').addEventListener('click', () => {
+    const selectedCates = new Set();
+    cateCbs.forEach(cb => {
+      if (cb.checked) selectedCates.add(cb.value);
+    });
+
+    if (selectedCates.size === 0) {
+      alert('請至少選擇一個日誌類別進行匯出！');
+      return;
+    }
+
+    // 進行過濾
+    const filteredLogs = logs.filter(log => selectedCates.has(getLogCategory(log)));
+
+    if (filteredLogs.length === 0) {
+      alert('所選類別中目前沒有任何日誌記錄。');
+      return;
+    }
+
+    // 建立 CSV 內容
+    let csvContent = "\uFEFF"; // UTF-8 BOM，防止 Excel 開啟亂碼
+    csvContent += "時間,類別,內容\n";
+
+    filteredLogs.forEach(log => {
+      const timeStr = new Date(log.time).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+      const cleanText = log.text.replace(/"/g, '""');
+      const cat = getLogCategory(log);
+      let cateText = '流水帳';
+      if (cat === 'red') cateText = '發現/搬運患者';
+      if (cat === 'yellow') cateText = '技術作業';
+      if (cat === 'green') cateText = '任務指令';
+      if (cat === 'danger') cateText = '緊急撤離';
+      if (cat === 'blue') cateText = '手動日誌';
+
+      csvContent += `"${timeStr}","${cateText}","${cleanText}"\n`;
+    });
+
+    // 執行下載
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().slice(0, 10);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `搜救管制站日誌_${today}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 關閉 Modal
+    exportModal.classList.add('hidden');
+  });
 
   // 清除日誌
   document.getElementById('clear-log-btn').addEventListener('click', () => {
@@ -1031,30 +1097,30 @@ function addLog(type, text, level = 'info') {
 
 // 匯出日誌為 CSV 檔案
 function exportLogsToCSV() {
-  let csvContent = "\uFEFF"; // UTF-8 BOM，防止 Excel 開啟亂碼
-  csvContent += "時間,日誌類型,內容\n";
+  // 打開 CSV 匯出篩選設定彈窗，由其內部按鈕決定下載行為
+  document.getElementById('csv-export-modal').classList.remove('hidden');
+  
+  // 每次開啟時預設不勾選灰色流水帳以利匯出精簡日誌
+  const flowCb = document.querySelector('.export-cate-checkbox[value="flow"]');
+  if (flowCb) flowCb.checked = false;
+}
 
-  logs.forEach(log => {
-    const timeStr = new Date(log.time).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-    const cleanText = log.text.replace(/"/g, '""'); // 雙引號跳脫
-    csvContent += `"${timeStr}","${log.type}","${cleanText}"\n`;
-  });
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  
-  const today = new Date().toISOString().slice(0,10);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `搜救管制站日誌_${today}.csv`);
-  link.style.visibility = 'hidden';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  addLog('auto', '安全官匯出了管制系統日誌 CSV 檔。');
-  renderLogs();
+// 取得日誌所屬顏色/類別分類
+function getLogCategory(log) {
+  const text = log.text;
+  if (text.includes('發現患者') || text.includes('搬運患者') || text.includes('犬最後確認')) {
+    return 'red';
+  } else if (text.includes('支撐作業') || text.includes('破壞作業') || text.includes('探測') || text.includes('繩索救援') || text.includes('INSARAG')) {
+    return 'yellow';
+  } else if (text.includes('工作開始') || text.includes('工作結束') || text.includes('任務狀態')) {
+    return 'green';
+  } else if (log.type === 'danger' || text.includes('緊急撤離') || text.includes('撤離記錄') || text.includes('全部撤出')) {
+    return 'danger';
+  } else if (log.type === 'manual') {
+    return 'blue';
+  } else {
+    return 'flow';
+  }
 }
 
 // --- 時間格式化小工具 ---

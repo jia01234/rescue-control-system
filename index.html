@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
 
@@ -437,6 +437,61 @@
     </div>
   </div>
 
-  <script src="app.js?v=17"></script>
+  <!-- CSV 匯出設定彈窗 (Modal) -->
+  <div id="csv-export-modal" class="modal hidden">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>📊 匯出日誌設定</h3>
+        <button id="close-export-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body text-left" style="text-align: left;">
+        <p style="margin-bottom: 12px; font-size: 0.9rem; color: var(--color-text-muted);">請勾選您要匯出至 CSV 檔案的日誌類別：</p>
+        
+        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer;">
+            <input type="checkbox" id="export-select-all" checked> <span>全選 / 全不選</span>
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15);">
+            <input type="checkbox" class="export-cate-checkbox" value="red" checked>
+            <span style="font-size: 0.95rem; color: #f87171; font-weight: bold;">🚨 發現/搬運患者 (紅色事件)</span>
+          </label>
+          
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.15);">
+            <input type="checkbox" class="export-cate-checkbox" value="yellow" checked>
+            <span style="font-size: 0.95rem; color: #fbbf24; font-weight: bold;">🛠️ 搜救技術作業 (黃色事件)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.15);">
+            <input type="checkbox" class="export-cate-checkbox" value="green" checked>
+            <span style="font-size: 0.95rem; color: #34d399; font-weight: bold;">🏁 任務管制指令 (綠色事件)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15);">
+            <input type="checkbox" class="export-cate-checkbox" value="blue" checked>
+            <span style="font-size: 0.95rem; color: #60a5fa; font-weight: bold;">📝 安全官手動日誌 (藍色事件)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.25);">
+            <input type="checkbox" class="export-cate-checkbox" value="danger" checked>
+            <span style="font-size: 0.95rem; color: #fca5a5; font-weight: bold;">⚠️ 緊急撤離警報 (橙紅事件)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+            <input type="checkbox" class="export-cate-checkbox" value="flow">
+            <span style="font-size: 0.95rem; color: rgba(255,255,255,0.5);">• 人員管制流水帳 (灰色流水帳)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 8px;">
+        <button id="confirm-export-csv" class="btn btn-success" style="flex: 1;">下載 CSV 檔案</button>
+        <button id="cancel-export-csv" class="btn btn-secondary" style="flex: 1;">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=18"></script>
 </body>
 </html>
