@@ -329,13 +329,49 @@ function setupEventListeners() {
 
   // 一鍵查詢彈窗內的「全員撤離」
   document.getElementById('modal-evac-btn').addEventListener('click', () => {
-    triggerGlobalEvacuation();
+    evacAllHotZoneMembers();
     closeHotzoneModal();
   });
 
-  // 全局緊急撤離按鈕 (大紅色按鈕)
-  document.getElementById('global-evacuate-btn').addEventListener('click', triggerGlobalEvacuation);
-  document.getElementById('close-overlay-btn').addEventListener('click', stopGlobalEvacuationAlert);
+  // 工作開始按鈕事件 (▶️ 工作開始)
+  const opStartModal = document.getElementById('op-start-modal');
+  document.getElementById('op-start-btn').addEventListener('click', () => {
+    // 寫入當前預設撤離區至 modal 中對應的 span/strong
+    document.getElementById('start-modal-zone-1').textContent = evacZones[0];
+    document.getElementById('start-modal-zone-2').textContent = evacZones[1];
+    document.getElementById('start-modal-zone-3').textContent = evacZones[2];
+    opStartModal.classList.remove('hidden');
+  });
+  document.getElementById('close-op-start-modal').addEventListener('click', () => {
+    opStartModal.classList.add('hidden');
+  });
+  document.getElementById('confirm-op-start').addEventListener('click', () => {
+    opStartModal.classList.add('hidden');
+    // 如果計時未啟動，則自動啟動任務時間
+    if (!isMissionRunning) {
+      toggleMissionTimer();
+    }
+    addLog('auto', '【任務狀態】工作開始。安全官已確認任務簡報、撤離訊號宣讀、撤離區位置及危險評估物品。');
+    renderLogs();
+  });
+
+  // 工作結束按鈕事件 (⏹️ 工作結束)
+  const opEndModal = document.getElementById('op-end-modal');
+  document.getElementById('op-end-btn').addEventListener('click', () => {
+    opEndModal.classList.remove('hidden');
+  });
+  document.getElementById('close-op-end-modal').addEventListener('click', () => {
+    opEndModal.classList.add('hidden');
+  });
+  document.getElementById('confirm-op-end').addEventListener('click', () => {
+    opEndModal.classList.add('hidden');
+    // 如果計時正在跑，則暫停任務時間
+    if (isMissionRunning) {
+      toggleMissionTimer();
+    }
+    addLog('danger', '【任務狀態】工作結束！搜救隊已撤離。請搜救犬進行最後搜偵確認，並完成 INSARAG 標記！');
+    renderLogs();
+  });
 
   // 音效播放按鈕
   document.getElementById('play-evac-audio').addEventListener('click', () => triggerAudioSignal('evacuate'));
@@ -397,12 +433,13 @@ function setupEventListeners() {
           hour12: false
         });
         const parts = formatter.formatToParts(now);
-        let minute = '00', second = '00';
+        let hour = '00', minute = '00', second = '00';
         parts.forEach(p => {
+          if (p.type === 'hour') hour = p.value;
           if (p.type === 'minute') minute = p.value;
           if (p.type === 'second') second = p.value;
         });
-        text = `${minute}分${second}秒`;
+        text = `${hour}:${minute}:${second}`; // 24小時制，顯示 時:分:秒
       }
       const currentVal = boardLogInput.value.trim();
       boardLogInput.value = currentVal ? `${currentVal} ${text}` : text;
@@ -425,12 +462,13 @@ function setupEventListeners() {
           hour12: false
         });
         const parts = formatter.formatToParts(now);
-        let minute = '00', second = '00';
+        let hour = '00', minute = '00', second = '00';
         parts.forEach(p => {
+          if (p.type === 'hour') hour = p.value;
           if (p.type === 'minute') minute = p.value;
           if (p.type === 'second') second = p.value;
         });
-        text = `${minute}分${second}秒`;
+        text = `${hour}:${minute}:${second}`; // 24小時制，顯示 時:分:秒
       }
       const currentVal = mainLogInput.value.trim();
       mainLogInput.value = currentVal ? `${currentVal} ${text}` : text;
@@ -754,53 +792,19 @@ window.deleteMember = function(id) {
 
 
 
-// --- 全面緊急撤離機制 ---
-function triggerGlobalEvacuation() {
-  // 1. 熱區所有人員狀態變更為「熱區中」，但系統將觸發全畫面閃爍
-  const hotzoneMembers = roster.filter(m => m.status === 'hotzone');
-  
-  addLog('danger', `🚨🚨🚨【緊急指令】安全官啟動「全面緊急撤退」！！！指定撤退地點：前進指揮站、車輛停放區、Boo。`, 'danger');
-  
-  // 2. 顯示全螢幕緊急撤退蓋板
-  document.getElementById('emergency-overlay').classList.remove('hidden');
-
-  // 3. 實體播送撤退嗶聲 (三短音，每聲1秒，每隔5秒重複一次)
-  triggerAudioSignal('evacuate');
-  if (loopEvacAlertInterval) clearInterval(loopEvacAlertInterval);
-  loopEvacAlertInterval = setInterval(() => {
-    triggerAudioSignal('evacuate');
-  }, 5000);
-
-  renderAll();
-}
-
-function stopGlobalEvacuationAlert() {
-  document.getElementById('emergency-overlay').classList.add('hidden');
-  if (loopEvacAlertInterval) {
-    clearInterval(loopEvacAlertInterval);
-    loopEvacAlertInterval = null;
-  }
-  addLog('auto', '緊急撤離警報音已由安全官關閉。');
-}
-
 // 一鍵撤退熱區所有人 (在點名 Modal 中的快捷動作)
 function evacAllHotZoneMembers() {
   const hotzoneMembers = roster.filter(m => m.status === 'hotzone');
   if (hotzoneMembers.length === 0) return;
 
   hotzoneMembers.forEach(m => {
-    m.status = 'returned';
-    if (m.entryTime && m.timerStarted) {
-      m.lastDuration = Math.floor((new Date() - new Date(m.entryTime)) / 1000);
-    } else {
-      m.lastDuration = 0;
-    }
+    m.status = 'standby';
     m.entryTime = null;
     m.timerStarted = false;
   });
 
   saveRoster();
-  addLog('danger', `🚨【撤離記錄】熱區人員已全部撤出並移至「已返回」名單。請安全官落實點名確認！`);
+  addLog('danger', `🚨【撤離記錄】熱區人員已全部撤出並回到「待命」狀態。請安全官落實點名確認！`);
   renderAll();
 }
 

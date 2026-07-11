@@ -7,22 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
-  <!-- 全局警報覆蓋層 (緊急撤離時閃爍) -->
-  <div id="emergency-overlay" class="emergency-overlay hidden">
-    <div class="overlay-content">
-      <div class="alert-icon">🚨</div>
-      <div class="alert-title">!!! 全面緊急撤離 !!!</div>
-      <div class="alert-zones">
-        <p>1. 第一撤離區：<strong id="overlay-zone-1">前進指揮站</strong></p>
-        <p>2. 第二撤離區：<strong id="overlay-zone-2">車輛停放區</strong></p>
-        <p>3. 第三撤離區：<strong id="overlay-zone-3">Boo</strong></p>
-      </div>
-      <button id="close-overlay-btn" class="btn btn-secondary">關閉警示畫面</button>
-    </div>
-  </div>
+
 
   <div class="app-container">
     <!-- 頂部狀態列 -->
@@ -32,6 +20,10 @@
         <h1>搜救管制站</h1>
       </div>
       <div class="header-status">
+        <div class="header-status-actions">
+          <button id="op-start-btn" class="btn btn-op-start">▶️ 工作開始</button>
+          <button id="op-end-btn" class="btn btn-op-end">⏹️ 工作結束</button>
+        </div>
         <div class="status-item">
           <span class="label">熱區人數</span>
           <span id="hotzone-count" class="value text-warning">0</span>
@@ -125,13 +117,6 @@
 
       <!-- 頁籤二：撤離與訊號 -->
       <section id="tab-signals" class="tab-panel">
-        <div class="panel-card danger-card text-center">
-          <h2 class="section-title text-danger">🚨 緊急撤離控制</h2>
-          <p class="subtitle">按下後將會播送警報音，並開啟點名引導</p>
-          <button id="global-evacuate-btn" class="btn btn-danger btn-xl pulse-btn">
-            全面緊急撤離
-          </button>
-        </div>
 
         <div class="panel-grid">
           <!-- 撤離區資訊 -->
@@ -360,6 +345,90 @@
     </div>
   </div>
 
-  <script src="app.js?v=10"></script>
+  <!-- 工作開始簡報彈窗 (Modal) -->
+  <div id="op-start-modal" class="modal hidden">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>▶️ 工作開始任務簡報</h3>
+        <button id="close-op-start-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body text-left" style="max-height: 70vh; overflow-y: auto; text-align: left;">
+        <div class="alert alert-info" style="margin-bottom: 16px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 10px; border-radius: 6px;">
+          <strong>📢 任務已啟動！</strong> 管制時間已開始。請落實以下安全通報事項：
+        </div>
+        
+        <div class="card-section" style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 8px;">
+          <h4 style="color: var(--color-primary); margin-bottom: 8px; margin-top: 0; font-size: 1.05rem;">📡 撤離訊號與宣讀詞</h4>
+          <ul style="padding-left: 20px; line-height: 1.6; margin: 0; font-size: 0.95rem;">
+            <li><strong>全面撤離 (Evacuate)</strong>：汽笛三短音（每聲約 1 秒，間隔 0.2 秒）。<br><span class="text-warning">宣讀：「全面撤離！全員立即撤退至指定撤離區！」</span></li>
+            <li style="margin-top: 8px;"><strong>停止作業/保持靜默 (Cease Operations)</strong>：汽笛一長音（持續約 3 秒）。<br><span class="text-warning">宣讀：「停止作業，保持安靜！現場靜默 3 分鐘！」</span></li>
+            <li style="margin-top: 8px;"><strong>恢復作業 (Resume)</strong>：汽笛一長一短音。<br><span class="text-warning">宣讀：「現場安全，搜救小隊恢復作業！」</span></li>
+          </ul>
+        </div>
+
+        <div class="card-section" style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 8px;">
+          <h4 style="color: var(--color-primary); margin-bottom: 8px; margin-top: 0; font-size: 1.05rem;">📍 當前撤離區</h4>
+          <ul style="padding-left: 20px; line-height: 1.6; margin: 0; font-size: 0.95rem;">
+            <li>第一撤離區：<strong id="start-modal-zone-1">前進指揮站</strong></li>
+            <li>第二撤離區：<strong id="start-modal-zone-2">車輛停放區</strong></li>
+            <li>第三撤離區：<strong id="start-modal-zone-3">Boo</strong></li>
+          </ul>
+        </div>
+
+        <div class="card-section" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 8px;">
+          <h4 style="color: #ef4444; margin-bottom: 8px; margin-top: 0; font-size: 1.05rem;">⚠️ 場所評估危險物品</h4>
+          <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px;">
+            <ul style="padding-left: 20px; line-height: 1.6; margin: 0; font-size: 0.95rem;">
+              <li><strong>結構危害</strong>：餘震引發結構二次倒塌</li>
+              <li><strong>有害粉塵</strong>：現場石綿 (Asbestos) 與微細粉塵防護</li>
+              <li><strong>化學品危害</strong>：注意管線瓦斯殘留洩漏</li>
+              <li><strong>環境危害</strong>：高溫、侷限空間缺氧與墜落危險</li>
+              <li><strong>其他危險</strong>：暴露之高壓電線、鋼筋與破碎玻璃</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-op-start" class="btn btn-success" style="width: 100%; padding: 10px;">確認並開始工作</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工作結束移交確認彈窗 (Modal) -->
+  <div id="op-end-modal" class="modal hidden">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>⏹️ 工作結束移交確認</h3>
+        <button id="close-op-end-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body text-left" style="max-height: 70vh; overflow-y: auto; text-align: left;">
+        <div class="alert alert-warning" style="margin-bottom: 16px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 10px; border-radius: 6px;">
+          <strong>⏹️ 工作已結束！</strong> 請落實以下收尾與最後確認程序：
+        </div>
+
+        <div class="card-section" style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 8px;">
+          <h4 style="color: #3b82f6; margin-bottom: 8px; margin-top: 0; font-size: 1.05rem;">📝 1. 工作場地標記說明 (INSARAG Marking)</h4>
+          <p style="margin-bottom: 12px; font-size: 0.9rem; color: var(--color-text-muted);">請依據下圖規範，於工作場地入口或明顯牆面進行橘色噴漆標記，並畫上代表「完成」的水平橫線：</p>
+          <div class="marking-system-img-container" style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center;">
+            <img src="marking_system.png" alt="工作場地標記案例" style="max-width: 100%; height: auto; border-radius: 4px;">
+          </div>
+        </div>
+
+        <div class="card-section" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); padding: 16px; border-radius: 12px;">
+          <h2 style="color: #ef4444; font-size: 1.3rem; font-weight: 800; margin: 0 0 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            🐕 2. 搜救犬最後確認
+          </h2>
+          <p style="font-size: 1.1rem; font-weight: 700; color: white; margin: 0; line-height: 1.5; text-align: center;">
+            請派遣搜救犬進行現場最後一遍偵搜確認，以確認無受困者殘留！
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-op-end" class="btn btn-danger" style="width: 100%; padding: 10px;">確認並關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=11"></script>
 </body>
 </html>

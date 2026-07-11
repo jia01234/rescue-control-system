@@ -1347,3 +1347,66 @@ body {
 .tag-chip:active {
   transform: scale(0.95);
 }
+
+/* 頂部工作開始/結束按鈕組 */
+.header-status-actions {
+  display: flex;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.btn-op-start {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-op-start:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.btn-op-start:active {
+  transform: translateY(0);
+}
+
+.btn-op-end {
+  background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-op-end:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+}
+
+.btn-op-end:active {
+  transform: translateY(0);
+}
+
+/* 讓 Modal 支援大尺寸 lg */
+.modal-content.modal-lg {
+  max-width: 600px;
+  width: 90%;
+}
