@@ -653,8 +653,6 @@ function renderAll() {
 function renderBoard() {
   const listStandby = document.getElementById('list-standby');
   const listHotzone = document.getElementById('list-hotzone');
-  const bannerEl = document.getElementById('team-exclusion-banner');
-  const bannerTextEl = document.getElementById('banner-text');
 
   // 清空看板
   listStandby.innerHTML = '';
@@ -662,19 +660,6 @@ function renderBoard() {
 
   let countS = 0;
   let countH = 0;
-
-  // 檢查另一組是否有成員在熱區中，進行互斥警示
-  const otherTeam = activeTeam === 'A' ? 'B' : 'A';
-  const isOtherTeamActive = roster.some(m => m.team === otherTeam && m.status === 'hotzone');
-  
-  if (isOtherTeamActive) {
-    bannerEl.className = 'exclusion-banner danger';
-    bannerTextEl.textContent = `管制警告：【搜救 ${otherTeam} 組】目前正在熱區出勤中！本隊（${activeTeam}組）已鎖定為待命備援，禁止移入熱區。`;
-    bannerEl.classList.remove('hidden');
-  } else {
-    // 自己這隊在熱區中，不顯示提示，隱藏橫幅以省空間
-    bannerEl.classList.add('hidden');
-  }
 
   // 更新複選模式下的欄位容器樣式
   const columnsEl = document.querySelector('.board-columns');
