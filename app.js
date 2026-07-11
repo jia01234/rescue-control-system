@@ -771,6 +771,21 @@ function openStatusSheet(member) {
   let teamName = `搜救 ${member.team} 組`;
   if (member.team === 'standby') teamName = '預備名單';
   document.getElementById('sheet-member-team').textContent = teamName;
+
+  // 依據隊員當前狀態，隱藏重複的狀態變更按鈕
+  const btnStandby = document.querySelector('.sheet-btn[data-status="standby"]');
+  const btnHotzone = document.querySelector('.sheet-btn[data-status="hotzone"]');
+
+  if (member.status === 'standby') {
+    btnStandby.classList.add('hidden');
+    btnHotzone.classList.remove('hidden');
+  } else if (member.status === 'hotzone') {
+    btnStandby.classList.remove('hidden');
+    btnHotzone.classList.add('hidden');
+  } else {
+    btnStandby.classList.remove('hidden');
+    btnHotzone.classList.remove('hidden');
+  }
   
   document.getElementById('status-sheet').classList.remove('hidden');
 }
